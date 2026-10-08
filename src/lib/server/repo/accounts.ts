@@ -1,6 +1,6 @@
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
-import { finAccount, txn, type AccountType } from '../db/schema';
+import { balanceSnapshot, finAccount, txn, type AccountType } from '../db/schema';
 import { newId } from '../id';
 
 export type AccountRow = typeof finAccount.$inferSelect;
@@ -91,4 +91,51 @@ export function setCsvMapping(db: Db, userId: string, id: string, mapping: unkno
 		.set({ csvMapping: JSON.stringify(mapping) })
 		.where(and(eq(finAccount.id, id), eq(finAccount.userId, userId)))
 		.run();
+}
+
+/**
+ * Reconcile against a statement: if cleared transactions add up to the statement balance, lock
+ * them as reconciled. With `adjust`, first add a cleared adjustment for any difference.
+ */
+export function reconcileAccount(
+	db: Db,
+	userId: string,
+	accountId: string,
+	statementMinor: number,
+	{ adjust = false, date }: { adjust?: boolean; date: string }
+): { ok: boolean; differenceMinor: number } {
+	const acct = getAccountWithBalance(db, userId, accountId);
+	if (!acct) throw new Error('Account not found');
+	const differenceMinor = statementMinor - acct.clearedMinor;
+	if (differenceMinor !== 0 && !adjust) return { ok: false, differenceMinor };
+	db.transaction(() => {
+		if (differenceMinor !== 0) {
+			db.insert(txn)
+				.values({
+					id: newId(),
+					userId,
+					accountId,
+					date,
+					amountMinor: differenceMinor,
+					memo: 'Reconciliation adjustment',
+					cleared: true
+				})
+				.run();
+		}
+		db.update(txn)
+			.set({ reconciled: true })
+			.where(and(eq(txn.accountId, accountId), eq(txn.userId, userId), eq(txn.cleared, true)))
+			.run();
+		db.insert(balanceSnapshot)
+			.values({
+				id: newId(),
+				userId,
+				accountId,
+				asOf: new Date(),
+				balanceMinor: statementMinor,
+				source: 'reconcile'
+			})
+			.run();
+	});
+	return { ok: true, differenceMinor };
 }

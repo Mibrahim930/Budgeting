@@ -16,17 +16,17 @@
 </script>
 
 <header class="sticky top-0 z-10 border-b border-slate-200 bg-white">
-	<div class="mx-auto flex max-w-5xl items-center gap-4 px-4">
+	<div class="mx-auto flex max-w-5xl items-center gap-x-4 px-4">
 		<a href="/budget" class="flex shrink-0 items-center gap-2 py-3 font-semibold">
 			<img src="/icon.svg" alt="" class="h-6 w-6" />
 			<span class="hidden sm:inline">Budgeting</span>
 		</a>
-		<nav class="-mb-px flex gap-1 overflow-x-auto text-sm">
+		<nav class="-mb-px flex flex-wrap gap-x-1 text-sm">
 			{#each links as link (link.href)}
 				{@const active = page.url.pathname.startsWith(link.href)}
 				<a
 					href={link.href}
-					class="border-b-2 px-2 py-3 whitespace-nowrap {active
+					class="border-b-2 px-1.5 py-2 whitespace-nowrap sm:px-2 sm:py-3 {active
 						? 'border-teal-700 font-medium text-teal-800'
 						: 'border-transparent text-slate-600 hover:text-slate-900'}"
 					aria-current={active ? 'page' : undefined}>{link.label}</a
