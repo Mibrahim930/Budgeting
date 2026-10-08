@@ -9,7 +9,12 @@
 
 {#if data.description}
 	<p class="mb-3 text-sm text-slate-500">
-		Bank description: <span class="font-mono">{data.description}</span> · from {data.source}
+		Bank description: <span class="font-mono">{data.description}</span> · from {data.source} ·
+		<a
+			class="text-teal-700 hover:underline"
+			href="/rules?match={encodeURIComponent(data.description)}&category={data.txn.categoryId ??
+				''}">Make a rule</a
+		>
 	</p>
 {/if}
 {#if data.reconciled}

@@ -8,6 +8,7 @@
 		{ href: '/accounts', label: 'Accounts' },
 		{ href: '/transactions', label: 'Transactions' },
 		{ href: '/import', label: 'Import' },
+		{ href: '/rules', label: 'Rules' },
 		{ href: '/reports', label: 'Reports' },
 		{ href: '/settings', label: 'Settings' },
 		...(data.user.role === 'admin' ? [{ href: '/admin/invites', label: 'Invites' }] : [])
