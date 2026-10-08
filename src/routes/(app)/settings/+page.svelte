@@ -35,7 +35,12 @@
 	<section class="card">
 		<h2 class="mb-1 font-medium">Account</h2>
 		<p class="text-sm text-slate-600">{data.user.name} · {data.user.email}</p>
-		<form method="POST" action="?/signOut" class="mt-3">
+		<form
+			method="POST"
+			action="?/signOut"
+			class="mt-3"
+			onsubmit={() => navigator.serviceWorker?.controller?.postMessage('clear-pages')}
+		>
 			<button class="btn-secondary">Sign out</button>
 		</form>
 	</section>
