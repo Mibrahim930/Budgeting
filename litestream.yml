@@ -1,0 +1,15 @@
+# Continuous SQLite backup to S3-compatible storage (Cloudflare R2, Backblaze B2, AWS S3).
+# Values come from environment variables (set them as Fly secrets).
+dbs:
+  - path: ${DATABASE_PATH}
+    replicas:
+      - type: s3
+        bucket: ${LITESTREAM_BUCKET}
+        path: budget
+        endpoint: ${LITESTREAM_ENDPOINT}
+        region: auto
+        access-key-id: ${LITESTREAM_ACCESS_KEY_ID}
+        secret-access-key: ${LITESTREAM_SECRET_ACCESS_KEY}
+        # Keep 30 days of history; take a full snapshot daily.
+        retention: 720h
+        snapshot-interval: 24h

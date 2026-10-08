@@ -10,6 +10,15 @@ export const actions: Actions = {
 		await getAuth().api.signOut({ headers: request.headers });
 		redirect(303, '/login');
 	},
+	deleteAccount: async ({ locals, request }) => {
+		const confirmEmail = String((await request.formData()).get('confirmEmail') ?? '').trim();
+		if (confirmEmail.toLowerCase() !== locals.user!.email.toLowerCase()) {
+			return fail(400, { deleteError: 'Type your email address exactly to confirm.' });
+		}
+		// Every table references the user with ON DELETE CASCADE, so this removes all their data.
+		getDb().delete(user).where(eq(user.id, locals.user!.id)).run();
+		redirect(303, '/login');
+	},
 	budgetMode: async ({ locals, request }) => {
 		const mode = String((await request.formData()).get('mode'));
 		if (mode !== 'envelope' && mode !== 'limits') return fail(400, { error: 'Unknown mode' });

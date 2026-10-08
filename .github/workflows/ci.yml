@@ -19,3 +19,18 @@ jobs:
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t budgeting .
+      - name: Container starts and answers the health check
+        run: |
+          docker run -d --name app -p 3000:3000 \
+            -e ORIGIN=http://localhost:3000 -e BETTER_AUTH_URL=http://localhost:3000 \
+            -e BETTER_AUTH_SECRET=ci-secret-ci-secret-ci-secret-ci-secret \
+            -e DATA_ENCRYPTION_KEY=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY= \
+            -e DISABLE_SYNC_SCHEDULER=1 budgeting
+          for i in $(seq 1 30); do curl -fs http://localhost:3000/healthz && exit 0; sleep 1; done
+          docker logs app; exit 1

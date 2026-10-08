@@ -8,7 +8,7 @@ export const init: ServerInit = () => {
 	if (!building) startSyncScheduler();
 };
 
-const PUBLIC_PATHS = ['/login', '/signup', '/privacy'];
+const PUBLIC_PATHS = ['/login', '/signup', '/privacy', '/healthz'];
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const { pathname } = event.url;
