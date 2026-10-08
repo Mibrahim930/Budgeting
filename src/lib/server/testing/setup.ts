@@ -5,6 +5,7 @@ import { registerUser } from '../signup';
 /** Fresh in-memory database + auth instance for a test. */
 export function setupTest() {
 	process.env.BETTER_AUTH_SECRET ??= 'test-secret-test-secret-test-secret-123';
+	process.env.DATA_ENCRYPTION_KEY ??= Buffer.alloc(32, 7).toString('base64');
 	const db = openDb(':memory:');
 	const auth = createAuth(db, { withSvelteKitCookies: false });
 	return { db, auth };

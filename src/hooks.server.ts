@@ -1,7 +1,12 @@
 import { building } from '$app/environment';
 import { getAuth } from '$lib/server/auth';
-import { error, redirect, type Handle } from '@sveltejs/kit';
+import { startSyncScheduler } from '$lib/server/sync/scheduler';
+import { error, redirect, type Handle, type ServerInit } from '@sveltejs/kit';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
+
+export const init: ServerInit = () => {
+	if (!building) startSyncScheduler();
+};
 
 const PUBLIC_PATHS = ['/login', '/signup', '/privacy'];
 

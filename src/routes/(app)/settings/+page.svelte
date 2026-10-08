@@ -41,6 +41,14 @@
 	</section>
 
 	<section class="card">
+		<h2 class="mb-1 font-medium">Bank sync</h2>
+		<p class="mb-3 text-sm text-slate-600">
+			Pull transactions from your bank automatically through SimpleFIN.
+		</p>
+		<a class="btn-secondary" href="/settings/bank">Manage bank sync</a>
+	</section>
+
+	<section class="card">
 		<h2 class="mb-1 font-medium">Budget style</h2>
 		<form method="POST" action="?/budgetMode" use:enhance class="space-y-2 text-sm">
 			<label class="flex items-start gap-2">
