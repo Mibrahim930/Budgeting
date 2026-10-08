@@ -5,6 +5,8 @@ const port = 4173;
 export default defineConfig({
 	testDir: 'e2e',
 	testMatch: '**/*.test.ts',
+	// Tests share one server and database, so run them in order.
+	workers: 1,
 	use: {
 		baseURL: `http://localhost:${port}`,
 		// Lets a pre-installed Chromium be used instead of downloading one.

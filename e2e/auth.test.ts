@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
+import { admin } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 
-const admin = { name: 'Admin', email: 'admin@example.test', password: 'admin-password-123' };
 const friend = { name: 'Friend', email: 'friend@example.test', password: 'friend-password-123' };
 
 async function signUp(page: import('@playwright/test').Page, u: typeof admin) {
