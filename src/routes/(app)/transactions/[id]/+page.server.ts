@@ -46,13 +46,19 @@ export const load: PageServerLoad = ({ locals, params }) => {
 	};
 };
 
+/** Split children are edited through their parent. */
+function rootId(userId: string, id: string) {
+	const t = getTransaction(getDb(), userId, id);
+	return t?.parentId ?? id;
+}
+
 export const actions: Actions = {
 	save: async ({ locals, params, request }) => {
 		const userId = requireUserId(locals);
 		const form = await request.formData();
 		const result = await handleValidation(() => {
 			const input = parseTxnForm(form);
-			updateTransaction(getDb(), userId, params.id, input);
+			updateTransaction(getDb(), userId, rootId(userId, params.id), input);
 			return input.accountId;
 		});
 		if (typeof result === 'string') redirect(303, `/accounts/${result}`);
@@ -60,8 +66,8 @@ export const actions: Actions = {
 	},
 	delete: async ({ locals, params }) => {
 		const userId = requireUserId(locals);
-		const t = getTransaction(getDb(), userId, params.id);
-		deleteTransaction(getDb(), userId, params.id);
+		const t = getTransaction(getDb(), userId, rootId(userId, params.id));
+		if (t) deleteTransaction(getDb(), userId, t.id);
 		redirect(303, t ? `/accounts/${t.accountId}` : '/transactions');
 	}
 };

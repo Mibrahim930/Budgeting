@@ -1,5 +1,7 @@
 # Plan: Personal budgeting web app ("Budgeting")
 
+> **Status (October 2026):** milestones 1–10 are implemented. The items under "Later" are not built yet.
+
 ## Context
 You want your own budgeting software, to use yourself and to share with a few friends. The repo (`mibrahim930/budgeting`, branch `claude/vibrant-galileo-bo0ndu`) is empty, so this is a new project.
 
