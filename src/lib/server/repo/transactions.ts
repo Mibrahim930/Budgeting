@@ -106,7 +106,7 @@ function validate(db: Db, userId: string, input: TxnInput) {
  * When money moves between an on-budget and an off-budget account, the on-budget leg may keep a
  * category (e.g. paying a loan from checking).
  */
-function transferLegCategory(
+export function transferLegCategory(
 	db: Db,
 	userId: string,
 	accountId: string,

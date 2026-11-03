@@ -10,6 +10,7 @@ import { getAccount, listAccounts, type AccountRow } from './accounts';
 import { billsDueBetween, getBill, type BillOccurrence } from './bills';
 import { getCategory } from './categories';
 import { defaultIncomeCategoryId, getPaySchedule } from './pay-schedule';
+import { suggestMatches, type IncomeMatch, type LineMatch } from './plan-matching';
 import {
 	assertCategory,
 	createTransaction,
@@ -19,6 +20,15 @@ import {
 	updateTransaction,
 	ValidationError
 } from './transactions';
+
+export {
+	linkIncome,
+	linkLine,
+	suggestIncomeMatch,
+	suggestLineMatches,
+	type IncomeMatch,
+	type LineMatch
+} from './plan-matching';
 
 export type PaycheckRow = typeof paycheck.$inferSelect;
 export type LineRow = typeof paycheckLine.$inferSelect;
@@ -436,11 +446,15 @@ export function confirmIncome(db: Db, userId: string, paycheckId: string) {
 	});
 }
 
-/** Untick "Paycheck received": delete the income transaction. */
+/**
+ * Untick "Paycheck received": delete the income transaction the app recorded. A linked one (it
+ * came from an import or bank sync, so it isn't `manual`) is only unlinked.
+ */
 export function unconfirmIncome(db: Db, userId: string, paycheckId: string) {
 	const p = requirePaycheck(db, userId, paycheckId);
 	if (!p.incomeTxnId) return;
-	const row = getTransaction(db, userId, p.incomeTxnId);
+	const income = getTransaction(db, userId, p.incomeTxnId);
+	const row = income?.source === 'manual' ? income : undefined;
 	if (row) assertNotReconciled(db, userId, row);
 	db.transaction((tx) => {
 		const t = tx as unknown as Db;
@@ -571,6 +585,8 @@ export type PaycheckDetail = PaycheckRow & {
 	/** Planned spending with no cash account: stays in the deposit account until spent. */
 	spendingMoneyMinor: number;
 	billsDue: BillOccurrence[];
+	/** Synced transactions that look like planned lines being paid, and the paycheck arriving. */
+	matches: { lines: Record<string, LineMatch>; income: IncomeMatch | null };
 };
 
 /** Expense totals per category in `[from, to)`. */
@@ -671,7 +687,8 @@ export function getPaycheck(db: Db, userId: string, id: string): PaycheckDetail 
 		spendingMoneyMinor: lines
 			.filter((l) => l.kind === 'spending' && !l.toAccountId && l.status === 'planned')
 			.reduce((a, l) => a + l.amountMinor, 0),
-		billsDue: billsDueBetween(db, userId, p.date, end)
+		billsDue: billsDueBetween(db, userId, p.date, end),
+		matches: suggestMatches(db, userId, p.id)
 	};
 }
 

@@ -70,6 +70,9 @@
 
 	const submitForm = (e: Event) => (e.currentTarget as HTMLInputElement).form?.requestSubmit();
 
+	const chipClass = 'mt-1 inline-block rounded bg-slate-50 px-1.5 py-0.5 text-xs text-slate-500';
+	const linkClass = 'shrink-0 font-medium text-teal-700 hover:underline';
+
 	const statClass = $derived(
 		left < 0 ? 'text-red-600' : left > 0 ? 'text-amber-700' : 'text-emerald-700'
 	);
@@ -136,12 +139,25 @@
 					onchange={submitForm}
 				/>
 			</form>
-			<label for="income-{uid}" class="min-w-0 grow cursor-pointer">
-				<span class="block text-sm font-medium">Paycheck received</span>
-				<span class="block text-xs text-slate-500">
-					into {paycheck.accountName} · {dayLabel(paycheck.date)}
-				</span>
-			</label>
+			<div class="min-w-0 grow">
+				<label for="income-{uid}" class="block cursor-pointer">
+					<span class="block text-sm font-medium">Paycheck received</span>
+					<span class="block text-xs text-slate-500">
+						into {paycheck.accountName} · {dayLabel(paycheck.date)}
+					</span>
+				</label>
+				{#if !paycheck.incomeConfirmed && paycheck.matches.income}
+					{@const m = paycheck.matches.income}
+					<form method="POST" action="?/linkIncome" use:enhance={keep} class={chipClass}>
+						<input type="hidden" name="paycheckId" value={paycheck.id} />
+						<input type="hidden" name="txnId" value={m.txnId} />
+						<span>Looks received on {monthDay(m.date)} —</span>
+						<button class={linkClass} title="Link {m.payeeName ?? m.description ?? 'transaction'}"
+							>Link</button
+						>
+					</form>
+				{/if}
+			</div>
 			<span class="shrink-0 text-sm font-medium">
 				{#if paycheck.incomeTxnId}
 					<a href="/transactions/{paycheck.incomeTxnId}" class="hover:underline">
@@ -157,6 +173,7 @@
 		{#each paycheck.lines as l (l.id)}
 			{@const done = l.status === 'done'}
 			{@const boxId = `line-${l.id}-${uid}`}
+			{@const match = done ? undefined : paycheck.matches.lines[l.id]}
 			<li class="flex items-center gap-3 py-2.5">
 				<form
 					method="POST"
@@ -175,28 +192,47 @@
 						onchange={submitForm}
 					/>
 				</form>
-				<label for={boxId} class="min-w-0 grow cursor-pointer">
-					<span class="block truncate text-sm font-medium {done ? 'text-slate-500' : ''}">
-						{l.label}
-					</span>
-					{#if l.kind === 'spending' && l.spentMinor !== null}
-						{@const pct =
-							l.amountMinor > 0 ? Math.min(100, (l.spentMinor / l.amountMinor) * 100) : 100}
-						<span class="block text-xs text-slate-500">
-							spent {formatMoney(l.spentMinor)} of {formatMoney(l.amountMinor)}
+				<div class="min-w-0 grow">
+					<label for={boxId} class="block cursor-pointer">
+						<span class="block truncate text-sm font-medium {done ? 'text-slate-500' : ''}">
+							{l.label}
 						</span>
-						<span class="mt-1 block h-1 w-full max-w-40 overflow-hidden rounded bg-slate-100">
-							<span
-								class="block h-full {l.spentMinor > l.amountMinor ? 'bg-red-500' : 'bg-teal-600'}"
-								style="width: {pct}%"
-							></span>
-						</span>
-					{:else}
-						<span class="block truncate text-xs text-slate-500">{subText(l)}</span>
+						{#if l.kind === 'spending' && l.spentMinor !== null}
+							{@const pct =
+								l.amountMinor > 0 ? Math.min(100, (l.spentMinor / l.amountMinor) * 100) : 100}
+							<span class="block text-xs text-slate-500">
+								spent {formatMoney(l.spentMinor)} of {formatMoney(l.amountMinor)}
+							</span>
+							<span class="mt-1 block h-1 w-full max-w-40 overflow-hidden rounded bg-slate-100">
+								<span
+									class="block h-full {l.spentMinor > l.amountMinor ? 'bg-red-500' : 'bg-teal-600'}"
+									style="width: {pct}%"
+								></span>
+							</span>
+						{:else}
+							<span class="block truncate text-xs text-slate-500">{subText(l)}</span>
+						{/if}
+					</label>
+					{#if match}
+						<form method="POST" action="?/linkLine" use:enhance={keep} class={chipClass}>
+							<input type="hidden" name="id" value={l.id} />
+							<input type="hidden" name="txnId" value={match.txnId} />
+							<input type="hidden" name="partnerTxnId" value={match.partnerTxnId ?? ''} />
+							<span>
+								Looks paid on {monthDay(match.date)} · {formatMoney(Math.abs(match.amountMinor))} —
+							</span>
+							<button
+								class={linkClass}
+								title="Link {match.payeeName ?? match.description ?? 'transaction'}">Link</button
+							>
+						</form>
 					{/if}
-				</label>
+				</div>
 				{#if done}
 					<span class="shrink-0 text-sm font-medium">
+						{#if l.txnId && l.txnOrigin === 'linked'}
+							<span class="mr-1 text-xs font-normal text-slate-400">linked</span>
+						{/if}
 						{#if l.txnId}
 							<a href="/transactions/{l.txnId}" class="hover:underline" title="View transaction">
 								<Money cents={l.amountMinor} />

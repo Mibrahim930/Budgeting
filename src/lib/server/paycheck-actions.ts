@@ -8,6 +8,8 @@ import {
 	allocateLeftover,
 	confirmIncome,
 	confirmLine,
+	linkIncome,
+	linkLine,
 	removeLine,
 	unconfirmIncome,
 	unconfirmLine,
@@ -45,6 +47,20 @@ export const paycheckActions = {
 	unconfirmIncome: action((userId, form) => {
 		unconfirmIncome(getDb(), userId, field(form, 'paycheckId'));
 		return { unconfirmed: true };
+	}),
+	linkLine: action((userId, form) => {
+		linkLine(
+			getDb(),
+			userId,
+			field(form, 'id'),
+			field(form, 'txnId'),
+			field(form, 'partnerTxnId') || null
+		);
+		return { linked: true };
+	}),
+	linkIncome: action((userId, form) => {
+		linkIncome(getDb(), userId, field(form, 'paycheckId'), field(form, 'txnId'));
+		return { linked: true };
 	}),
 	addLine: action((userId, form) => {
 		addLine(getDb(), userId, field(form, 'paycheckId'), parseLineForm(form));

@@ -245,3 +245,46 @@ test("the admin cannot see the friend's bills or plans, and sets up a pay schedu
 	await expect(page.getByText('Set up your pay schedule')).toHaveCount(0);
 	await expect(page.getByText('No paycheck planned yet')).toBeVisible();
 });
+
+// Part 4 (M7): a bank-imported payment is linked to the plan instead of entered twice
+test('an imported payment is suggested for its bill and linked without a duplicate', async ({
+	page
+}) => {
+	expect(paycheckId).not.toBe('');
+	// Part 3 ended signed in as the admin; this one is the friend's.
+	await signIn(page);
+	await page.goto(`/paychecks/${paycheckId}`);
+	const netflix = page.getByRole('checkbox', { name: 'Netflix', exact: true });
+	await netflix.uncheck();
+	await expect(netflix).not.toBeChecked();
+	await page.goto('/transactions?q=netflix');
+	await expect(page.getByRole('listitem').filter({ hasText: /netflix/i })).toHaveCount(0);
+
+	await page.goto('/import');
+	await page.getByLabel('Into account').selectOption({ label: 'Main checking' });
+	await page.getByLabel('File').setInputFiles({
+		name: 'bank.csv',
+		mimeType: 'text/csv',
+		buffer: Buffer.from('Posting Date,Description,Amount\n01/10/2030,NETFLIX.COM,-15.49\n')
+	});
+	await expect(page.getByText(/^\s*1 transactions? found/)).toBeVisible();
+	await page.getByRole('button', { name: /^Import 1 transactions?$/ }).click();
+	await expect(page.getByRole('status')).toContainText('Imported 1 new');
+
+	await page.goto(`/paychecks/${paycheckId}`);
+	const row = page
+		.getByRole('list', { name: 'Plan checklist' })
+		.getByRole('listitem')
+		.filter({ has: page.getByRole('checkbox', { name: 'Netflix', exact: true }) });
+	await expect(row).toContainText('Looks paid on Jan 10 · $15.49');
+	await row.getByRole('button', { name: 'Link', exact: true }).click();
+	await expect(netflix).toBeChecked();
+	await expect(row).toContainText('linked');
+	await expect(row).not.toContainText('Looks paid');
+
+	await page.goto('/transactions?q=netflix');
+	const rows = page.getByRole('listitem').filter({ hasText: /netflix/i });
+	await expect(rows).toHaveCount(1);
+	await expect(rows).toContainText('Subscriptions');
+	await expectBalances(page, { 'Main checking': '$2,834.51' });
+});
