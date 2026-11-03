@@ -64,12 +64,14 @@ src/routes/(app)/                   signed-in pages (home `/` is the paycheck pl
 
 You need a [Fly.io](https://fly.io) account and the `fly` CLI. For backups you also need a free Cloudflare R2 bucket (or Backblaze B2 / S3).
 
-1. **Name the app.** In `fly.toml`, replace every `budgeting-change-me` with a unique name, then run:
+1. **Create the app.** `fly.toml` is already named `paycheck-planner` (change all three occurrences if you pick another name), then run:
 
    ```sh
-   fly apps create <your-app-name>
-   fly volumes create budget_data --size 1 --region iad
+   fly apps create paycheck-planner
+   fly volumes create budget_data --size 1 --region iad --app paycheck-planner
    ```
+
+   The step-by-step version of this whole section, including the account sign-ups, is in [docs/go-live.md](docs/go-live.md).
 
 2. **Set the secrets.** Generate each value with `openssl rand -base64 32`:
 

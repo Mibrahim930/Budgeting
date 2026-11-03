@@ -1,13 +1,13 @@
-# Fly.io config. Before the first deploy, change `app` and the two URLs below to your app name.
+# Fly.io config for the paycheck-planner app. To rename, change `app` and the two URLs below.
 # See README.md -> Deploying.
-app = "budgeting-change-me"
+app = "paycheck-planner"
 primary_region = "iad"
 
 [build]
 
 [env]
-  ORIGIN = "https://budgeting-change-me.fly.dev"
-  BETTER_AUTH_URL = "https://budgeting-change-me.fly.dev"
+  ORIGIN = "https://paycheck-planner.fly.dev"
+  BETTER_AUTH_URL = "https://paycheck-planner.fly.dev"
   # Real client IP for rate limiting (set by Fly's edge).
   ADDRESS_HEADER = "Fly-Client-IP"
   APP_TIMEZONE = "America/New_York"
