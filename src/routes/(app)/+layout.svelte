@@ -4,6 +4,8 @@
 	let { data, children } = $props();
 
 	const links = $derived([
+		{ href: '/', label: 'Paychecks' },
+		{ href: '/bills', label: 'Bills' },
 		{ href: '/accounts', label: 'Accounts' },
 		{ href: '/transactions', label: 'Transactions' },
 		{ href: '/import', label: 'Import' },
@@ -12,6 +14,10 @@
 		{ href: '/settings', label: 'Settings' },
 		...(data.user.role === 'admin' ? [{ href: '/admin/invites', label: 'Invites' }] : [])
 	]);
+
+	/** `/` covers the home page and every paycheck page; the rest match by prefix. */
+	const isActive = (href: string, path: string) =>
+		href === '/' ? path === '/' || path.startsWith('/paychecks') : path.startsWith(href);
 </script>
 
 <header class="sticky top-0 z-10 border-b border-slate-200 bg-white">
@@ -22,7 +28,7 @@
 		</a>
 		<nav class="-mb-px flex flex-wrap gap-x-1 text-sm">
 			{#each links as link (link.href)}
-				{@const active = page.url.pathname.startsWith(link.href)}
+				{@const active = isActive(link.href, page.url.pathname)}
 				<a
 					href={link.href}
 					class="border-b-2 px-1.5 py-2 whitespace-nowrap sm:px-2 sm:py-3 {active

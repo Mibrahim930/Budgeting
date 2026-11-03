@@ -10,8 +10,9 @@ async function signUp(page: import('@playwright/test').Page, u: typeof admin) {
 	await page.getByLabel('Email').fill(u.email);
 	await page.getByLabel(/Password/).fill(u.password);
 	await page.getByRole('button', { name: 'Create account' }).click();
-	await expect(page).toHaveURL(/\/accounts/);
-	await expect(page.getByRole('heading', { name: 'Accounts', exact: true })).toBeVisible();
+	// A brand-new user starts with the onboarding wizard.
+	await expect(page).toHaveURL(/\/welcome$/);
+	await expect(page.getByRole('button', { name: 'Finish setup' })).toBeVisible();
 }
 
 test('first visitor creates the admin account, invites a friend', async ({ page }) => {

@@ -45,6 +45,14 @@
 	</section>
 
 	<section class="card">
+		<h2 class="mb-1 font-medium">Pay schedule</h2>
+		<p class="mb-3 text-sm text-slate-600">
+			How often you're paid, your typical take-home pay and where it lands.
+		</p>
+		<a class="btn-secondary" href="/settings/pay">Edit pay schedule</a>
+	</section>
+
+	<section class="card">
 		<h2 class="mb-1 font-medium">Bank sync</h2>
 		<p class="mb-3 text-sm text-slate-600">
 			Pull transactions from your bank automatically through SimpleFIN.
