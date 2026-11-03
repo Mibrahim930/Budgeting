@@ -68,6 +68,129 @@ test('bills are added, listed with their next due date, and edited', async ({ pa
 	await expect(page).toHaveURL(/\/bills$/);
 	await expect(billRow(page, 'Netflix')).toContainText('$15.99');
 	await expect(billRow(page, 'Rent')).toContainText('$1,200.00');
+
+	// Back to the §2.3 price, which part 2's dollar figures rely on.
+	await billRow(page, 'Netflix').getByRole('link').click();
+	await page.getByLabel('Amount').fill('15.49');
+	await page.getByRole('button', { name: 'Save bill' }).click();
+	await expect(page.getByText('Bill saved')).toBeVisible();
+	await page.getByRole('link', { name: '← Bills' }).click();
+	await expect(billRow(page, 'Netflix')).toContainText('$15.49');
 });
 
 // Part 2 (M5): paycheck plan
+
+// The friend's 2030-01-03 paycheck. M6's isolation test checks the admin gets a 404 for it.
+let paycheckId = '';
+
+const left = (page: Page) => page.getByTestId('left-to-allocate');
+const picker = (page: Page) => page.getByRole('region', { name: 'Add to plan' });
+const projectedAfter = (page: Page, account: string) =>
+	page
+		.getByRole('row')
+		.filter({ hasText: account })
+		.getByTestId(/^projected-/);
+const accountRow = (page: Page, account: string) =>
+	page.getByRole('listitem').filter({ hasText: account });
+
+async function expectBalances(page: Page, balances: Record<string, string>) {
+	await page.goto('/accounts');
+	for (const [name, amount] of Object.entries(balances)) {
+		await expect(accountRow(page, name)).toContainText(amount);
+	}
+}
+
+test('a paycheck is planned, allocated and ticked off', async ({ page }) => {
+	await signIn(page);
+
+	await page.goto('/paychecks/new?date=2030-01-03&next=2030-01-17');
+	await expect(page.getByLabel('Pay date')).toHaveValue('2030-01-03');
+	await expect(page.getByLabel('Next payday')).toHaveValue('2030-01-17');
+	await expect(page.getByLabel('Paid into').locator('option:checked')).toHaveText('Main checking');
+	await page.getByLabel('Amount', { exact: true }).fill('2000');
+	await expect(page.getByRole('checkbox', { name: /Netflix/ })).toBeChecked();
+	await expect(page.getByRole('checkbox', { name: /Rent/ })).toHaveCount(0);
+	await page.getByRole('button', { name: 'Create plan' }).click();
+
+	await expect(page).toHaveURL(/\/paychecks\/(?!new\b)[^/?]+$/);
+	paycheckId = new URL(page.url()).pathname.split('/').pop()!;
+	await expect(left(page)).toHaveText('$1,984.51');
+	await expect(page.getByText('due Jan 9 · Subscriptions')).toBeVisible();
+	await expect(
+		page
+			.getByRole('list', { name: 'Upcoming bills' })
+			.getByRole('listitem')
+			.filter({ hasText: 'Netflix' })
+	).toContainText('In plan ✓');
+
+	// Savings: added at $90, then corrected to $100 in the checklist.
+	await picker(page).getByRole('button', { name: 'Savings', exact: true }).click();
+	await picker(page).getByLabel('Savings account').selectOption({ label: 'Emergency' });
+	await picker(page).getByLabel('Amount', { exact: true }).fill('90');
+	await picker(page).getByRole('button', { name: 'Add to plan' }).click();
+	await expect(left(page)).toHaveText('$1,894.51');
+	await expect(page.getByText('to Emergency')).toBeVisible();
+	await page.getByLabel('Amount for Emergency').fill('100');
+	await page.getByLabel('Amount for Emergency').press('Tab');
+	await expect(left(page)).toHaveText('$1,884.51');
+
+	await picker(page).getByRole('button', { name: 'Debt', exact: true }).click();
+	await picker(page).getByLabel('Debt account').selectOption({ label: 'Visa' });
+	await picker(page).getByLabel('Amount', { exact: true }).fill('150');
+	await picker(page).getByRole('button', { name: 'Add to plan' }).click();
+	await expect(left(page)).toHaveText('$1,734.51');
+	await expect(page.getByText('Visa payment')).toBeVisible();
+
+	await page.getByRole('button', { name: 'Use $1,734.51 as spending money' }).click();
+	await expect(left(page)).toHaveText('$0.00');
+	await expect(page.getByText('Every dollar has a job')).toBeVisible();
+	await expect(page.getByText('Spending money until next payday: $1,734.51')).toBeVisible();
+
+	await expect(projectedAfter(page, 'Emergency')).toHaveText('$350.00');
+	await expect(projectedAfter(page, 'Visa')).toHaveText('-$150.00');
+	await expect(projectedAfter(page, 'Main checking')).toHaveText('$2,734.51');
+
+	// Ticking "Paycheck received" records the income.
+	await page.getByRole('checkbox', { name: 'Paycheck received', exact: true }).check();
+	await expect(
+		page.getByRole('checkbox', { name: 'Paycheck received', exact: true })
+	).toBeChecked();
+	await expect(page.getByRole('button', { name: 'Delete plan' })).toBeDisabled();
+	await expectBalances(page, { 'Main checking': '$3,000.00' });
+
+	await page.goto(`/paychecks/${paycheckId}`);
+	for (const name of ['Netflix', 'Emergency', 'Visa']) {
+		const box = page.getByRole('checkbox', { name, exact: true });
+		await box.check();
+		await expect(box).toBeChecked();
+	}
+	// Projections don't move once the money has really moved.
+	await expect(projectedAfter(page, 'Main checking')).toHaveText('$2,734.51');
+	await expectBalances(page, {
+		'Main checking': '$2,734.51',
+		Emergency: '$350.00',
+		Visa: '-$150.00'
+	});
+
+	await page.goto('/transactions?q=netflix');
+	const netflixRows = page.getByRole('listitem').filter({ hasText: 'Netflix' });
+	await expect(netflixRows).toHaveCount(1);
+	await expect(netflixRows).toContainText('Subscriptions');
+
+	await page.goto(`/paychecks/${paycheckId}`);
+	const savings = page.getByRole('checkbox', { name: 'Emergency', exact: true });
+	await savings.uncheck();
+	await expect(savings).not.toBeChecked();
+	await expectBalances(page, { Emergency: '$250.00', 'Main checking': '$2,834.51' });
+
+	await page.goto('/');
+	const home = page.getByTestId('home');
+	await expect(home.getByTestId('left-to-allocate')).toHaveText('$0.00');
+	await expect(
+		home.getByRole('list', { name: 'All paychecks' }).getByRole('listitem').first()
+	).toContainText('Partly confirmed');
+	await expect(home.getByRole('link', { name: /Open plan/ })).toHaveAttribute(
+		'href',
+		`/paychecks/${paycheckId}`
+	);
+});

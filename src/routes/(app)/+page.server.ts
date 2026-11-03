@@ -2,7 +2,7 @@ import { addDays, today } from '$lib/month';
 import { nextPayday } from '$lib/planner/payday';
 import { getDb } from '$lib/server/db/client';
 import { needsOnboarding } from '$lib/server/onboarding';
-import { requireUserId } from '$lib/server/page-helpers';
+import { loadBillFormOptions, requireUserId } from '$lib/server/page-helpers';
 import { paycheckActions } from '$lib/server/paycheck-actions';
 import { listAccounts } from '$lib/server/repo/accounts';
 import { billsDueBetween } from '$lib/server/repo/bills';
@@ -30,17 +30,25 @@ export const load: PageServerLoad = ({ locals }) => {
 	const paychecks = listPaychecks(db, userId);
 	const picked = pickHomePaycheck(paychecks, now);
 	const upcomingEnd = schedule ? nextPayday(schedule, now) : addDays(now, UPCOMING_DAYS);
+	const home = picked ? (getPaycheck(db, userId, picked.id) ?? null) : null;
+	const keep = home
+		? [home.accountId, ...home.lines.flatMap((l) => [l.effectiveFromAccountId, l.toAccountId])]
+		: [];
+	const options = loadBillFormOptions(userId, keep);
 
 	return {
 		today: now,
 		schedule,
 		paychecks,
-		home: picked ? (getPaycheck(db, userId, picked.id) ?? null) : null,
+		home,
 		suggestNext: suggestNextPaycheck(db, userId, now),
 		upcoming: billsDueBetween(db, userId, now, upcomingEnd),
 		upcomingEnd,
 		accounts: listAccounts(db, userId),
-		uncategorized: uncategorizedSummary(db, userId)
+		uncategorized: uncategorizedSummary(db, userId),
+		// Options for the "Add to plan" picker.
+		lineAccounts: options.accounts,
+		groups: options.groups
 	};
 };
 
