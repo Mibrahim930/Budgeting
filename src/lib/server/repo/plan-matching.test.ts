@@ -320,7 +320,9 @@ describe('linkLine', () => {
 			startDate: '2030-01-09',
 			accountId: checking
 		});
-		const again = addLine(db, alice, p, { kind: 'bill', billId: gym, dueDate: '2030-01-09' });
+		// The open plan covers Jan 9, so creating the bill put it in the plan.
+		const again = getPaycheck(db, alice, p)!.lines.find((l) => l.billId === gym)!.id;
+		expect(getLine(db, alice, again)).toMatchObject({ dueDate: '2030-01-09', status: 'planned' });
 		db.update(txn).set({ categoryId: null }).where(eq(txn.id, ok)).run();
 		refuse(() => linkLine(db, alice, again, ok), 'already linked');
 

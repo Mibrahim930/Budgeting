@@ -316,3 +316,27 @@ Schema edits (§3), migration, `budgetMode` removal in `auth.ts` + layout, delet
 3. Open a fresh database: first sign-up lands on `/welcome`; finishing lands on `/` with the accounts snapshot.
 4. Confirm the migration applies to a database created by the October version (copy of the old schema with a `budget_allocation` row) without error.
 5. Final: README deploy section still accurate; `docs/plan.md` carries this plan's status; `git status` clean; branch pushed.
+
+---
+
+# Addendum (November 2026): Calendar and automatically planned charges
+
+## Context
+The owner is using the app on Railway and asked for a **calendar** of recurring charges, and for charges to be **added to a plan automatically** when they fall before the next paycheck. Recurring charges already exist as bills (`/bills`, `recurring_bill`), and a new paycheck pre-ticks the bills in its window. Two gaps remain: there is no calendar view, and a bill created or changed *after* a plan exists only appears as an "Add" suggestion instead of landing in the plan. The owner chose: a month calendar showing charges, paydays and paid status; **no** automatic drafting of paychecks (they create each plan themselves); ship via a PR merged once CI is green.
+
+## Behaviour
+1. **Auto-add on bill changes** (`src/lib/server/repo/bills.ts`):
+   - `createBill`: for every paycheck of the user whose status is not `confirmed` and whose window `[date, windowEnd)` contains an occurrence of the new bill, add a `bill` line for that occurrence (reuse `addLine` from `repo/paychecks.ts`; skip occurrences already planned anywhere).
+   - `updateBill`: for this bill's **planned** (not done) lines: drop lines whose `dueDate` is no longer an occurrence or no longer inside their paycheck's window; refresh `label`, `amountMinor`, `fromAccountId`, `toAccountId`, `categoryId` from the bill on the remaining planned lines; then add any occurrence now missing, as in `createBill`. Done lines are never touched.
+   - `endBill`: remove this bill's planned lines dated after `endedAt`.
+   - All inside one `db.transaction`, scoped by user; a helper `syncBillIntoPlans(db, userId, billId)` shared by the three.
+2. **Calendar data** (`src/lib/server/repo/calendar.ts`): `calendarMonth(db, userId, month)` returns, for `[month-01, nextMonth-01)`: bill occurrences with `{ billId, name, amountMinor, dueDate, accountName, status: 'unplanned' | 'planned' | 'paid', paycheckId? }` (status from the joined `paycheck_line`: none → unplanned, `planned` → planned, `done` → paid), predicted paydays from the schedule (`paydaysBetween`), and actual paychecks (`listPaychecks`) with their status. Totals per month: charges due, of which paid.
+3. **Calendar page** `/calendar` (nav item "Calendar" right after "Bills"): `?month=YYYY-MM` with prev/next and "Today". A 7-column month grid (Sun–Sat), each day cell showing the day number, a payday marker, and one dot per charge coloured by status (grey = not in a plan, blue = planned, green = paid); the selected day (default: today, or the 1st when viewing another month) lists its items below the grid with name, amount, account, status pill and links (charge → `/bills/[id]`, plan → `/paychecks/[id]`). "Add a charge on this day" opens `BillForm` prefilled with `startDate` = that day, frequency monthly, `dayOfMonth` = that day; submitting creates the bill (which auto-adds it to any open plan per 1) and returns to the calendar on that day with a "Added to <paycheck date> plan" notice when that happened. Legend under the grid. Must be usable at 390 px: dots not text inside cells; the agenda list carries the detail.
+4. Bills page: add a "Calendar" link; `UpcomingBills` on the home page keeps its "Add" button for charges that pre-date the auto-add behaviour.
+
+## Tests
+- Repo: creating a bill whose occurrence falls inside an open plan's window adds a planned line (and not to a confirmed plan, and not when the occurrence is outside every window); updating the bill's day moves the line; updating the amount refreshes the planned line but leaves a done line alone; ending the bill removes later planned lines; `calendarMonth` statuses and payday dates; cross-user isolation.
+- e2e (`e2e/calendar.test.ts`, runs after `planner`): as the friend, open `/calendar?month=2030-01`, pick Jan 16, add "Gym" $100 monthly from that day → the notice says it was added to the Jan 3 plan; `/paychecks/<id>` shows a Gym line of $100 and left-to-allocate `-$100.00`; the calendar shows Jan 16 with a planned (blue) dot and Jan 9 Netflix as paid (green); Jan 3 and Jan 17 carry payday markers.
+
+## Verification
+`npm run check && npm run lint && npm test && npm run test:e2e` green; screenshots of `/calendar` at 390 px and 1200 px; PR against `main`, merged when CI is green (Railway deploys `main`).

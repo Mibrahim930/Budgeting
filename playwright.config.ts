@@ -12,6 +12,12 @@ export default defineConfig({
 		// Lets a pre-installed Chromium be used instead of downloading one.
 		launchOptions: { executablePath: process.env.PW_CHROMIUM_PATH || undefined }
 	},
+	// Files run alphabetically; the calendar test builds on the friend's plan from planner.test.ts,
+	// so it runs in a second project after everything else.
+	projects: [
+		{ name: 'app', testIgnore: /calendar\.test\.ts$/ },
+		{ name: 'calendar', testMatch: /calendar\.test\.ts$/, dependencies: ['app'] }
+	],
 	webServer: {
 		command: `rm -rf ./data/e2e && npm run build && node build`,
 		port,
