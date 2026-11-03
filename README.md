@@ -16,20 +16,22 @@ A small, self-hosted paycheck planner for me and a few friends: before each payd
 - Reports (including where each paycheck went), plus an installable phone app (PWA) that can show your plans offline.
 - Invite-only accounts, with passwords or passkeys. Each person sees only their own data.
 
-**Stack:** SvelteKit, TypeScript, SQLite (Drizzle ORM), Better Auth and Tailwind. It runs on Fly.io, with Litestream backing the database up to Cloudflare R2.
+**Stack:** SvelteKit, TypeScript, SQLite (Drizzle ORM), Better Auth and Tailwind. It runs on Railway, or on Fly.io with Litestream backing the database up to Cloudflare R2.
 
 **Docs:** [docs/research.md](docs/research.md) covers the research behind these choices, and [docs/plan.md](docs/plan.md) is the plan.
 
 ## Development
 
 ```sh
-cp .env.example .env            # then fill in the two secrets (see the comments)
+git clone https://github.com/Mibrahim930/Budgeting.git && cd Budgeting
 npm install
+npm run setup                   # writes .env with fresh secrets and creates ./data
 npm run dev                     # http://localhost:5173 — the first sign-up becomes the admin
 ```
 
 | Command               | What it does                                                                    |
 | --------------------- | ------------------------------------------------------------------------------- |
+| `npm run setup`       | Create `.env` with generated secrets (never overwrites an existing one)         |
 | `npm run check`       | Type-check                                                                      |
 | `npm run lint`        | Prettier + ESLint (`npm run format` fixes formatting)                           |
 | `npm test`            | Unit/integration tests (Vitest, in-memory SQLite)                               |
@@ -52,13 +54,22 @@ src/lib/server/repo/                data access — every query is scoped by use
   bills.ts                          recurring bills and the occurrences due in a window
   pay-schedule.ts                   each user's pay schedule
   reports.ts                        reports, including where each paycheck went
+  backup.ts                         copy of the whole database for the admin's "Download a backup"
 src/lib/server/onboarding.ts        the set-up wizard (first accounts and pay schedule)
 src/lib/server/paycheck-actions.ts  form actions shared by the home page and plan pages
 src/lib/server/import/              importer with dedupe, payee clean-up
 src/lib/server/rules/               categorization rules
 src/lib/server/sync/                SimpleFIN client, sync, background scheduler
 src/routes/(app)/                   signed-in pages (home `/` is the paycheck planner)
+scripts/setup.mjs                   `npm run setup`: writes .env with generated secrets
 ```
+
+## Deploying
+
+Bank sync is optional: the app works on balances you type in, and SimpleFIN can be added later without code changes. There are two ways to host it, both with step-by-step runbooks in [docs/go-live.md](docs/go-live.md):
+
+- **[Path A — Railway](docs/go-live.md#path-a--railway-no-bank-sync-no-extra-accounts)** (about $5/month after a free trial): set up entirely in the browser, with no other accounts. Backups are files the admin downloads from **Invites → Download a backup now**. `railway.json` holds the service settings.
+- **[Path B — Fly.io with Cloudflare R2 backups](docs/go-live.md#path-b--flyio-with-cloudflare-r2-backups)** (about $2–3/month): needs the `fly` CLI and a Cloudflare account, and Litestream backs every change up continuously. The next section is the short version of path B.
 
 ## Deploying to Fly.io (about $2–3/month)
 

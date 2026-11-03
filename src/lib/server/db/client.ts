@@ -5,7 +5,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import * as schema from './schema';
 
-export type Db = BetterSQLite3Database<typeof schema>;
+export type Db = BetterSQLite3Database<typeof schema> & { $client: Database.Database };
 
 const MIGRATIONS_DIR = resolve(process.env.MIGRATIONS_DIR ?? 'src/lib/server/db/migrations');
 

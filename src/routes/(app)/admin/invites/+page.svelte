@@ -58,3 +58,16 @@
 		</tbody>
 	</table>
 </div>
+
+<div class="card mt-6">
+	<h2 class="mb-2 text-lg font-semibold">Backups</h2>
+	<p class="mb-3 text-sm text-slate-600">
+		The backup file contains everyone's data, so keep it somewhere safe, such as a cloud drive or a
+		password-manager attachment.
+	</p>
+	<a class="btn" href="/admin/backup" download>Download a backup now</a>
+	<p class="mt-3 text-sm text-slate-500">
+		To restore, stop the app and replace the database file with a backup; docs/go-live.md has the
+		steps.
+	</p>
+</div>
