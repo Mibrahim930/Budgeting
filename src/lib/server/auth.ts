@@ -28,7 +28,8 @@ export function createAuth(db: Db, { withSvelteKitCookies = true } = {}) {
 			updateAge: 60 * 60 * 24
 		},
 		rateLimit: {
-			enabled: true,
+			// Off only for automated tests, which sign in far more often than a person would.
+			enabled: !process.env.DISABLE_AUTH_RATE_LIMIT,
 			window: 60,
 			max: 100,
 			customRules: {
