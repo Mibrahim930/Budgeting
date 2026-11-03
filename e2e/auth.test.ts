@@ -10,7 +10,8 @@ async function signUp(page: import('@playwright/test').Page, u: typeof admin) {
 	await page.getByLabel('Email').fill(u.email);
 	await page.getByLabel(/Password/).fill(u.password);
 	await page.getByRole('button', { name: 'Create account' }).click();
-	await expect(page).toHaveURL(/\/budget/);
+	await expect(page).toHaveURL(/\/accounts/);
+	await expect(page.getByRole('heading', { name: 'Accounts', exact: true })).toBeVisible();
 }
 
 test('first visitor creates the admin account, invites a friend', async ({ page }) => {

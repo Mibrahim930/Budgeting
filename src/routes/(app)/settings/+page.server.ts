@@ -18,11 +18,5 @@ export const actions: Actions = {
 		// Every table references the user with ON DELETE CASCADE, so this removes all their data.
 		getDb().delete(user).where(eq(user.id, locals.user!.id)).run();
 		redirect(303, '/login');
-	},
-	budgetMode: async ({ locals, request }) => {
-		const mode = String((await request.formData()).get('mode'));
-		if (mode !== 'envelope' && mode !== 'limits') return fail(400, { error: 'Unknown mode' });
-		getDb().update(user).set({ budgetMode: mode }).where(eq(user.id, locals.user!.id)).run();
-		return { saved: true };
 	}
 };

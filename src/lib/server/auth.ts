@@ -20,8 +20,7 @@ export function createAuth(db: Db, { withSvelteKitCookies = true } = {}) {
 		},
 		user: {
 			additionalFields: {
-				role: { type: 'string', input: false, defaultValue: 'user' },
-				budgetMode: { type: 'string', input: false, defaultValue: 'envelope' }
+				role: { type: 'string', input: false, defaultValue: 'user' }
 			}
 		},
 		session: {

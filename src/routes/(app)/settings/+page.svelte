@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { authClient } from '$lib/auth-client';
 	import { onMount } from 'svelte';
 
@@ -54,34 +53,9 @@
 	</section>
 
 	<section class="card">
-		<h2 class="mb-1 font-medium">Budget style</h2>
-		<form method="POST" action="?/budgetMode" use:enhance class="space-y-2 text-sm">
-			<label class="flex items-start gap-2">
-				<input
-					type="radio"
-					name="mode"
-					value="envelope"
-					checked={data.user.budgetMode === 'envelope'}
-				/>
-				<span
-					><b>Envelope (zero-based).</b> Give every dollar of income a job. Unspent money rolls over;
-					overspending comes out of next month's money to budget.</span
-				>
-			</label>
-			<label class="flex items-start gap-2">
-				<input
-					type="radio"
-					name="mode"
-					value="limits"
-					checked={data.user.budgetMode === 'limits'}
-				/>
-				<span
-					><b>Monthly limits.</b> Set a spending limit per category each month and track against it. Nothing
-					rolls over.</span
-				>
-			</label>
-			<button class="btn">Save</button>
-		</form>
+		<h2 class="mb-1 font-medium">Categories</h2>
+		<p class="mb-3 text-sm text-slate-600">Add, rename or hide the categories for your spending.</p>
+		<a class="btn-secondary" href="/categories">Manage categories</a>
 	</section>
 
 	<section class="card">
@@ -108,8 +82,8 @@
 	<section class="card border-red-200">
 		<h2 class="mb-1 font-medium text-red-700">Delete my account</h2>
 		<p class="mb-3 text-sm text-slate-600">
-			Permanently deletes your accounts, transactions, budgets, rules and bank connections. This
-			can't be undone.
+			Permanently deletes your accounts, transactions, paycheck plans, bills, rules and bank
+			connections. This can't be undone.
 		</p>
 		{#if form && 'deleteError' in form}<p class="error mb-2">{form.deleteError}</p>{/if}
 		<form

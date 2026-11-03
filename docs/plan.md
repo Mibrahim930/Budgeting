@@ -165,7 +165,7 @@ planTotals(paycheck, lines): { allocated, left, doneCount, plannedCount, byKind:
 projectBalances(paycheck: { accountId, amountMinor, incomeConfirmed }, lines, balances: Map<accountId, number>)
   : Map<accountId, { before, after }>
 ```
-Projection rules: if income is not yet confirmed, `+amount` on the deposit account. For every **planned** line: `from = fromAccountId ?? deposit`; `from −= amount`; if `toAccountId`, `to += amount`. Done lines and a confirmed paycheck change nothing (they are already in the real balances). Spending lines with no cash account still subtract from `from` (earmarked). Accounts missing from `balances` count as 0.
+Projection rules: if income is not yet confirmed, `+amount` on the deposit account. For every **planned** line: `from = fromAccountId ?? deposit`; `from −= amount`; if `toAccountId`, `to += amount`. Done lines and a confirmed paycheck change nothing (they are already in the real balances). **Spending lines with no cash account do not change any projection**: the money physically stays in checking and ticking them creates no transaction, so the projected checking balance must not drop when they are ticked (this is what makes §2.3's $2,734.51 correct). The UI shows that earmarked amount separately as "Spending money until next payday". Accounts missing from `balances` count as 0.
 
 Tests: the §2.3 numbers; over-allocation gives negative `left`; no lines → `left = amount`; done lines are inert; bill paid from the credit card moves the card, not checking; card payment line moves checking down and card up; spending to a cash account moves money to cash.
 
@@ -257,7 +257,7 @@ Reuse: `Money.svelte` (`colored`), `CategorySelect.svelte`, `TransactionList.sve
 New components in `src/lib/components/`:
 - `PaycheckPlan.svelte` — header ("Paycheck · Fri Jan 3 · $2,000.00"), three stats with `data-testid="left-to-allocate"` (green at 0, amber > 0, red < 0 with "Over-allocated by $X"), the checklist: "Paycheck received" row, then one row per line (checkbox form, label + sub-text like "to Emergency fund" / "due Jan 9 · Subscriptions" / "Visa payment" / "spent $84.20 of $300.00", amount input while planned or `Money` + link to `/transactions/{txnId}` once done, ✕ remove), footer "Use $X leftover as spending money" when `left > 0` and "Every dollar has a job" at 0.
 - `AddLinePicker.svelte` — four segmented buttons (Savings / Debt / Bill / Spending) with the matching fields; bills offered are the window's occurrences not yet planned, amount pre-filled.
-- `ProjectedBalances.svelte` — account · now · after, deposit account first, then touched accounts, then the rest.
+- `ProjectedBalances.svelte` — account · now · after, deposit account first, then touched accounts, then the rest; a footer line "Spending money until next payday: $X" (sum of planned spending lines with no cash account), since that money stays in checking.
 - `UpcomingBills.svelte` — bills due before the next payday with "In plan ✓" or "Add".
 - `PaycheckList.svelte` — past/future paychecks with status pill (Planned / Partly confirmed / Confirmed) and left-to-allocate if ≠ 0.
 - `BillForm.svelte` — frequency-driven fields; "Paid from" account; `CategorySelect`; "Pays off" select of credit/loan accounts.

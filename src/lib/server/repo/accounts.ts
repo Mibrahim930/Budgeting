@@ -1,7 +1,10 @@
+import { today } from '$lib/month';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { balanceSnapshot, finAccount, txn, type AccountType } from '../db/schema';
 import { newId } from '../id';
+import { listCategories } from './categories';
+import { createTransaction } from './transactions';
 
 export type AccountRow = typeof finAccount.$inferSelect;
 export type AccountWithBalance = AccountRow & { balanceMinor: number; clearedMinor: number };
@@ -70,6 +73,38 @@ export function createAccount(
 		})
 		.run();
 	return id;
+}
+
+/**
+ * Create an account with a starting balance. Debt accounts (credit/loan) take a positive amount
+ * owed, stored as a negative balance. Like Actual, an on-budget account's starting balance counts
+ * as income.
+ */
+export function createAccountWithOpeningBalance(
+	db: Db,
+	userId: string,
+	input: AccountInput,
+	balanceMinor: number,
+	date = today()
+) {
+	return db.transaction(() => {
+		const id = createAccount(db, userId, input);
+		const signed =
+			input.type === 'credit' || input.type === 'loan' ? -Math.abs(balanceMinor) : balanceMinor;
+		if (signed !== 0) {
+			const onBudget = input.onBudget ?? !OFF_BUDGET_BY_DEFAULT.includes(input.type);
+			const income = onBudget ? listCategories(db, userId).find((c) => c.isIncome)?.id : undefined;
+			createTransaction(db, userId, {
+				accountId: id,
+				date,
+				amountMinor: signed,
+				payeeName: 'Starting balance',
+				categoryId: income ?? null,
+				cleared: true
+			});
+		}
+		return id;
+	});
 }
 
 export function updateAccount(db: Db, userId: string, id: string, patch: Partial<AccountInput>) {

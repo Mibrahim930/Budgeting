@@ -68,7 +68,7 @@ export interface TxnInput {
 	importBatchId?: string | null;
 }
 
-function assertCategory(db: Db, userId: string, categoryId: string | null | undefined) {
+export function assertCategory(db: Db, userId: string, categoryId: string | null | undefined) {
 	if (categoryId && !getCategory(db, userId, categoryId)) {
 		throw new ValidationError('Unknown category');
 	}
@@ -496,4 +496,23 @@ export function listTransactions(db: Db, userId: string, f: TxnFilter = {}): Txn
 			.filter((c) => c.t.parentId === r.t.id)
 			.map((c) => ({ ...c.t, categoryName: c.categoryName }))
 	}));
+}
+
+/** Number and total of on-budget transactions that still need a category. */
+export function uncategorizedSummary(db: Db, userId: string) {
+	const r = db
+		.select({ n: sql<number>`count(*)`, total: sql<number>`coalesce(sum(${txn.amountMinor}), 0)` })
+		.from(txn)
+		.innerJoin(finAccount, eq(finAccount.id, txn.accountId))
+		.where(
+			and(
+				eq(txn.userId, userId),
+				eq(finAccount.onBudget, true),
+				eq(txn.isParent, false),
+				sql`${txn.categoryId} is null`,
+				sql`${txn.transferId} is null`
+			)
+		)
+		.get();
+	return { count: r?.n ?? 0, total: r?.total ?? 0 };
 }

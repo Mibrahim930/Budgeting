@@ -4,7 +4,6 @@
 	let { data, children } = $props();
 
 	const links = $derived([
-		{ href: '/budget', label: 'Budget' },
 		{ href: '/accounts', label: 'Accounts' },
 		{ href: '/transactions', label: 'Transactions' },
 		{ href: '/import', label: 'Import' },
@@ -17,7 +16,7 @@
 
 <header class="sticky top-0 z-10 border-b border-slate-200 bg-white">
 	<div class="mx-auto flex max-w-5xl items-center gap-x-4 px-4">
-		<a href="/budget" class="flex shrink-0 items-center gap-2 py-3 font-semibold">
+		<a href="/" class="flex shrink-0 items-center gap-2 py-3 font-semibold">
 			<img src="/icon.svg" alt="" class="h-6 w-6" />
 			<span class="hidden sm:inline">Budgeting</span>
 		</a>

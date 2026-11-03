@@ -43,7 +43,7 @@ src/lib/money.ts                 cents parsing/formatting (money is always integ
 src/lib/import/                  CSV + OFX parsers (shared by browser preview and server)
 src/lib/server/db/schema.ts      all tables
 src/lib/server/repo/             data access — every query is scoped by user id
-src/lib/server/budget/engine.ts  envelope / limits math (pure functions)
+src/lib/planner/                 paycheck-planner date and plan math (pure functions)
 src/lib/server/import/           importer with dedupe, payee clean-up
 src/lib/server/rules/            categorization rules
 src/lib/server/sync/             SimpleFIN client, sync, background scheduler

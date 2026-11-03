@@ -4,12 +4,12 @@ import { createInvite } from './invites';
 import { makeUser, setupTest } from '../testing/setup';
 import { createAccount, getAccountWithBalance, listAccounts } from './accounts';
 import { listCategories } from './categories';
-import { copyLastMonth, getBudgetMonth, setBudgeted, uncategorizedSummary } from './budget';
 import {
 	createTransaction,
 	deleteTransaction,
 	getTransaction,
 	listTransactions,
+	uncategorizedSummary,
 	updateTransaction,
 	ValidationError
 } from './transactions';
@@ -201,7 +201,6 @@ describe('user isolation', () => {
 				categoryId: cat('Groceries')
 			})
 		).toThrow(ValidationError);
-		expect(() => setBudgeted(db, bob, cat('Groceries'), '2026-01', 100)).toThrow(ValidationError);
 		expect(() =>
 			updateTransaction(db, bob, 'nope', {
 				accountId: bobAccount,
@@ -212,62 +211,24 @@ describe('user isolation', () => {
 	});
 });
 
-describe('budget month', () => {
-	it('combines income, budgets, spending, transfers and off-budget accounts', () => {
+describe('uncategorized summary', () => {
+	it('counts on-budget, non-transfer transactions without a category', () => {
+		createTransaction(db, alice, { accountId: checking, date: '2026-01-02', amountMinor: -1500 });
 		createTransaction(db, alice, {
 			accountId: checking,
-			date: '2026-01-01',
-			amountMinor: 300000,
-			categoryId: cat('Paycheck')
-		});
-		setBudgeted(db, alice, cat('Groceries'), '2026-01', 50000);
-		createTransaction(db, alice, {
-			accountId: card,
 			date: '2026-01-03',
-			amountMinor: -12000,
+			amountMinor: -2500,
 			categoryId: cat('Groceries')
 		});
-		// Paying the card is a transfer between budget accounts: no budget effect.
 		createTransaction(db, alice, {
 			accountId: checking,
-			date: '2026-01-20',
-			amountMinor: -12000,
+			date: '2026-01-04',
+			amountMinor: -10000,
 			transferAccountId: card
 		});
-		// Off-budget activity is ignored.
-		createTransaction(db, alice, {
-			accountId: brokerage,
-			date: '2026-01-04',
-			amountMinor: 999999,
-			categoryId: cat('Paycheck')
-		});
-		const m = getBudgetMonth(db, alice, '2026-01', 'envelope');
-		expect(m.income).toBe(300000);
-		expect(m.toBudget).toBe(250000);
-		const groceries = m.groups.flatMap((g) => g.categories).find((c) => c.name === 'Groceries')!;
-		expect(groceries.activity).toBe(-12000);
-		expect(groceries.available).toBe(38000);
-
-		const feb = getBudgetMonth(db, alice, '2026-02', 'envelope');
-		const febGroceries = feb.groups
-			.flatMap((g) => g.categories)
-			.find((c) => c.name === 'Groceries')!;
-		expect(febGroceries.available).toBe(38000);
-		expect(uncategorizedSummary(db, alice).count).toBe(0);
-	});
-
-	it('copies last month budget into empty categories', () => {
-		setBudgeted(db, alice, cat('Groceries'), '2026-01', 50000);
-		setBudgeted(db, alice, cat('Utilities'), '2026-01', 9000);
-		setBudgeted(db, alice, cat('Utilities'), '2026-02', 12000);
-		copyLastMonth(db, alice, '2026-02');
-		const feb = getBudgetMonth(db, alice, '2026-02', 'limits');
-		const by = (n: string) => feb.groups.flatMap((g) => g.categories).find((c) => c.name === n)!;
-		expect(by('Groceries').budgeted).toBe(50000);
-		expect(by('Utilities').budgeted).toBe(12000);
-	});
-
-	it('refuses to budget income categories', () => {
-		expect(() => setBudgeted(db, alice, cat('Paycheck'), '2026-01', 100)).toThrow(ValidationError);
+		// Off-budget accounts don't need categories.
+		createTransaction(db, alice, { accountId: brokerage, date: '2026-01-05', amountMinor: 999 });
+		expect(uncategorizedSummary(db, alice)).toEqual({ count: 1, total: -1500 });
+		expect(uncategorizedSummary(db, bob)).toEqual({ count: 0, total: 0 });
 	});
 });
