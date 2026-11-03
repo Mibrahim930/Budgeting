@@ -1,8 +1,8 @@
 {
 	"name": "Budgeting",
 	"short_name": "Budget",
-	"description": "Envelope budgeting for you and a few friends",
-	"start_url": "/budget",
+	"description": "Paycheck planning for you and a few friends",
+	"start_url": "/",
 	"scope": "/",
 	"display": "standalone",
 	"background_color": "#f8fafc",

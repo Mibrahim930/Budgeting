@@ -23,7 +23,8 @@ export default defineConfig({
 			BETTER_AUTH_SECRET: 'e2e-secret-e2e-secret-e2e-secret-e2e',
 			DATA_ENCRYPTION_KEY: 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=',
 			DATABASE_PATH: './data/e2e/budget.db',
-			DISABLE_SYNC_SCHEDULER: '1'
+			DISABLE_SYNC_SCHEDULER: '1',
+			DISABLE_AUTH_RATE_LIMIT: '1'
 		}
 	}
 });

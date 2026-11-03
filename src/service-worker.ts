@@ -5,8 +5,8 @@
 import { build, files, version } from '$service-worker';
 
 // Offline support: app code and static files are cached at install. Pages and their data are
-// fetched from the network first; the last copy is kept so budgets can be viewed offline
-// (read-only). Saving changes always needs the network.
+// fetched from the network first; the last copy is kept so paycheck plans, bills and accounts can
+// be viewed offline (read-only). Ticking lines and saving changes always need the network.
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 const ASSETS = `assets-${version}`;

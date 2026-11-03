@@ -27,9 +27,6 @@ export const user = sqliteTable('user', {
 	role: text('role', { enum: ['admin', 'user'] })
 		.notNull()
 		.default('user'),
-	budgetMode: text('budget_mode', { enum: ['envelope', 'limits'] })
-		.notNull()
-		.default('envelope'),
 	...timestamps
 });
 
@@ -288,17 +285,137 @@ export const txn = sqliteTable(
 	]
 );
 
-export const budgetAllocation = sqliteTable(
-	'budget_allocation',
+// ---------------------------------------------------------------------------
+// Paycheck planner
+// ---------------------------------------------------------------------------
+
+export const PAY_FREQUENCIES = ['weekly', 'biweekly', 'semimonthly', 'monthly'] as const;
+export type PayFrequency = (typeof PAY_FREQUENCIES)[number];
+
+/** How often the user is paid. One per user; only used for predictions and defaults. */
+export const paySchedule = sqliteTable(
+	'pay_schedule',
 	{
+		id: text('id').primaryKey(),
 		userId: userId(),
-		categoryId: text('category_id')
-			.notNull()
-			.references(() => category.id, { onDelete: 'cascade' }),
-		month: text('month').notNull(),
-		budgetedMinor: integer('budgeted_minor').notNull().default(0)
+		frequency: text('frequency', { enum: PAY_FREQUENCIES }).notNull(),
+		/** Typical net pay. */
+		amountMinor: integer('amount_minor').notNull(),
+		/** A known payday: the cycle anchor, and the day-of-month source for monthly pay. */
+		anchorDate: text('anchor_date').notNull(),
+		/** Semimonthly only. */
+		semiDay1: integer('semi_day_1').notNull().default(1),
+		semiDay2: integer('semi_day_2').notNull().default(15),
+		depositAccountId: text('deposit_account_id').references(() => finAccount.id, {
+			onDelete: 'set null'
+		}),
+		incomeCategoryId: text('income_category_id').references(() => category.id, {
+			onDelete: 'set null'
+		}),
+		...timestamps
 	},
-	(t) => [uniqueIndex('budget_allocation_key').on(t.userId, t.categoryId, t.month)]
+	(t) => [uniqueIndex('pay_schedule_user_idx').on(t.userId)]
+);
+
+export const BILL_FREQUENCIES = ['monthly', 'every_n_weeks', 'yearly', 'once'] as const;
+export type BillFrequency = (typeof BILL_FREQUENCIES)[number];
+
+export const recurringBill = sqliteTable(
+	'recurring_bill',
+	{
+		id: text('id').primaryKey(),
+		userId: userId(),
+		name: text('name').notNull(),
+		amountMinor: integer('amount_minor').notNull(),
+		frequency: text('frequency', { enum: BILL_FREQUENCIES }).notNull(),
+		/** Monthly/yearly: 1..31, clamped to the month's length. */
+		dayOfMonth: integer('day_of_month'),
+		/** Yearly: 1..12. */
+		monthOfYear: integer('month_of_year'),
+		/** Every N weeks: 1..52. */
+		intervalWeeks: integer('interval_weeks'),
+		/** First possible due date; the weekday anchor for every_n_weeks; the date for once. */
+		startDate: text('start_date').notNull(),
+		/** Inclusive last due date. */
+		endedAt: text('ended_at'),
+		/** Paid from. */
+		accountId: text('account_id')
+			.notNull()
+			.references(() => finAccount.id, { onDelete: 'cascade' }),
+		categoryId: text('category_id').references(() => category.id, { onDelete: 'set null' }),
+		/** Credit card or loan this bill pays down. */
+		payToAccountId: text('pay_to_account_id').references(() => finAccount.id, {
+			onDelete: 'set null'
+		}),
+		...timestamps
+	},
+	(t) => [index('recurring_bill_user_idx').on(t.userId)]
+);
+
+export const paycheck = sqliteTable(
+	'paycheck',
+	{
+		id: text('id').primaryKey(),
+		userId: userId(),
+		date: text('date').notNull(),
+		amountMinor: integer('amount_minor').notNull(),
+		/** Deposit account. */
+		accountId: text('account_id')
+			.notNull()
+			.references(() => finAccount.id, { onDelete: 'cascade' }),
+		incomeCategoryId: text('income_category_id').references(() => category.id, {
+			onDelete: 'set null'
+		}),
+		/** Expected next payday; the plan covers bills due in [date, nextDate). */
+		nextDate: text('next_date'),
+		/** Set when "Paycheck received" is ticked. */
+		incomeTxnId: text('income_txn_id').references(() => txn.id, { onDelete: 'set null' }),
+		note: text('note'),
+		...timestamps
+	},
+	(t) => [index('paycheck_user_date_idx').on(t.userId, t.date)]
+);
+
+export const LINE_KINDS = ['savings', 'debt', 'bill', 'spending'] as const;
+export type LineKind = (typeof LINE_KINDS)[number];
+export const LINE_STATUSES = ['planned', 'done'] as const;
+export type LineStatus = (typeof LINE_STATUSES)[number];
+export const TXN_ORIGINS = ['created', 'linked'] as const;
+
+export const paycheckLine = sqliteTable(
+	'paycheck_line',
+	{
+		id: text('id').primaryKey(),
+		userId: userId(),
+		paycheckId: text('paycheck_id')
+			.notNull()
+			.references(() => paycheck.id, { onDelete: 'cascade' }),
+		kind: text('kind', { enum: LINE_KINDS }).notNull(),
+		/** Snapshot text, so editing a bill later doesn't rewrite history. */
+		label: text('label').notNull(),
+		amountMinor: integer('amount_minor').notNull(),
+		/** Null means the paycheck's deposit account. */
+		fromAccountId: text('from_account_id').references(() => finAccount.id, {
+			onDelete: 'set null'
+		}),
+		toAccountId: text('to_account_id').references(() => finAccount.id, { onDelete: 'set null' }),
+		categoryId: text('category_id').references(() => category.id, { onDelete: 'set null' }),
+		billId: text('bill_id').references(() => recurringBill.id, { onDelete: 'set null' }),
+		/** The bill occurrence's due date. */
+		dueDate: text('due_date'),
+		status: text('status', { enum: LINE_STATUSES }).notNull().default('planned'),
+		txnId: text('txn_id').references(() => txn.id, { onDelete: 'set null' }),
+		/** Whether the app created the transaction or linked an existing (synced) one. */
+		txnOrigin: text('txn_origin', { enum: TXN_ORIGINS }),
+		doneAt: integer('done_at', { mode: 'timestamp_ms' }),
+		sort: integer('sort').notNull().default(0),
+		...timestamps
+	},
+	(t) => [
+		index('paycheck_line_user_idx').on(t.userId),
+		index('paycheck_line_paycheck_idx').on(t.paycheckId),
+		index('paycheck_line_bill_due_idx').on(t.billId, t.dueDate)
+	]
 );
 
 export const RULE_FIELDS = ['description', 'payee'] as const;

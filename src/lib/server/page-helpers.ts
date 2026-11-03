@@ -35,6 +35,26 @@ export function loadFormOptions(userId: string) {
 	};
 }
 
+/**
+ * Options for BillForm: open accounts with their type, and spending (non-income) categories.
+ * `keep` adds archived accounts an existing bill still points at, so editing doesn't drop them.
+ */
+export function loadBillFormOptions(userId: string, keep: (string | null)[] = []) {
+	const db = getDb();
+	return {
+		accounts: listAccounts(db, userId, { includeArchived: true })
+			.filter((a) => !a.archivedAt || keep.includes(a.id))
+			.map((a) => ({ id: a.id, name: a.name, type: a.type })),
+		groups: listCategoryTree(db, userId)
+			.filter((g) => !g.isIncome)
+			.map((g) => ({
+				id: g.id,
+				name: g.name,
+				categories: g.categories.map((c) => ({ id: c.id, name: c.name }))
+			}))
+	};
+}
+
 /** Wrap a form action so validation errors come back as `{ error }` with status 400. */
 export async function handleValidation<T>(fn: () => T | Promise<T>) {
 	try {

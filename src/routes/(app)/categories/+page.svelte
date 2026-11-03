@@ -12,7 +12,7 @@
 	};
 </script>
 
-<a href="/budget" class="text-sm text-slate-500 hover:underline">← Budget</a>
+<a href="/bills" class="text-sm text-slate-500 hover:underline">← Bills</a>
 <h1 class="mb-4 text-xl font-semibold">Categories</h1>
 {#if form?.error}<p class="error mb-3">{form.error}</p>{/if}
 

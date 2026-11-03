@@ -7,7 +7,7 @@ import { APIError } from 'better-auth/api';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals, url }) => {
-	if (locals.user) redirect(303, '/budget');
+	if (locals.user) redirect(303, '/');
 	const db = getDb();
 	const isFirstUser = countUsers(db) === 0;
 	const invite = url.searchParams.get('invite');
@@ -42,6 +42,6 @@ export const actions: Actions = {
 			if (e instanceof APIError) return fail(400, { name, email, error: e.message });
 			throw e;
 		}
-		redirect(303, '/budget');
+		redirect(303, '/');
 	}
 };

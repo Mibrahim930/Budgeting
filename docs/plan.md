@@ -1,147 +1,318 @@
-# Plan: Personal budgeting web app ("Budgeting")
+# Plan: Turn "Budgeting" into a paycheck planner
 
-> **Status (October 2026):** milestones 1–10 are implemented. The items under "Later" are not built yet.
+> **Status (November 2026):** all seven milestones are implemented and pushed. The verification checklist in §9 was run on the final commit.
 
-## Context
-You want your own budgeting software, to use yourself and to share with a few friends. The repo (`mibrahim930/budgeting`, branch `claude/vibrant-galileo-bo0ndu`) is empty, so this is a new project.
+## 1. Context
 
-A Sonnet research agent surveyed budgeting methods, open-source apps, bank-data APIs, stacks, money data modeling and security. Its main finding was that self-hosting Actual Budget is the fastest route to a working budget. You chose to build your own instead. So this app borrows Actual's proven budgeting rules and adds real per-friend accounts.
+### Where we are
+The repo `Mibrahim930/Budgeting` (branch `claude/vibrant-galileo-bo0ndu`, clean, CI green) already contains a working SvelteKit app built in October 2026: invite-only accounts with passwords/passkeys, an accounts + transactions ledger (transfers, splits, cleared/reconciled flags), CSV/OFX import with duplicate detection, SimpleFIN bank sync, categorization rules, reconciliation, reports, a PWA, and a Fly.io/Litestream deployment. Its centrepiece is a **monthly envelope budget** (`/budget/[month]`) modelled on Actual Budget.
 
-Your requirements:
-- Banks are in the US.
-- Transactions arrive by automatic bank sync.
-- It is a web app that works on a phone (PWA).
-- Each friend has a separate, private account.
-- Budgeting supports envelope/zero-based and simple per-category limits.
-- It costs under $5/mo and is hosted on Fly.io.
+### What changed
+The owner described how they actually want to use the app, and it is not monthly budgeting. It is **paycheck planning**:
 
-## Decisions (from research + your answers)
-| Area | Choice | Why |
-|---|---|---|
-| Framework | **SvelteKit + TypeScript** (`@sveltejs/adapter-node`) | One language end to end and a light runtime. Better Auth has first-party Svelte support. |
-| DB | **SQLite** via `better-sqlite3` + **Drizzle ORM** | One file and no DB server, which is plenty for fewer than 10 users. |
-| Backups | **Litestream → Cloudflare R2** (free tier) | Continuous replication. Restores are tested. |
-| Auth | **Better Auth** (email+password, passkey plugin), **invite-only signup** | Lucia is deprecated and Auth.js is in maintenance mode. Pin the version. |
-| Bank sync | **SimpleFIN Bridge** ($15/yr, **each user brings their own token**), behind a `BankProvider` interface | Cheapest US option, with no developer approval and no shared item cap. Plaid's free Trial (10 Items total) can be added later as a second provider. |
-| Fallback import | CSV/OFX upload | Covers banks SimpleFIN doesn't support. Also used to backfill history. |
-| UI | Tailwind CSS, mobile-first, PWA manifest + service worker (offline read-only) | Installs to the home screen without app stores. |
-| Hosting | **Fly.io**: one always-on shared-cpu-1x 256MB machine + 1GB volume, about $2–3/mo | Public HTTPS URL for friends. The volume holds SQLite. |
-| Tests | Vitest (unit/integration), Playwright (e2e, Chromium is pre-installed) | |
+> "If I get paid $1,000 on Friday, I have a savings account with $250, a credit card with a $300 balance, and my gym membership ($100) is due the day after I get paid, I want to go in, enter my pay amount, allocate some to savings, some to the credit card, and the gym amount — and see where my money will go before the paycheck comes."
 
-## Budgeting model
-Each user picks one of two modes in their settings:
-- **Envelope mode (default).** This follows Actual's rules.
-  - Income goes into a "To Budget" pool. You assign dollars to categories each month.
-  - `available = prev_available + budgeted + activity`, so leftover money rolls over.
-  - Overspending in a category is taken from next month's To Budget.
-- **Limits mode.** Each category gets a monthly target, compared with spending. There is no rollover and no To Budget pool. This is the "category spending limits" style.
+So the unit of planning is **one paycheck**, not one month. Every paycheck gets a plan made before payday; the plan is a checklist the owner ticks off as the money actually moves; recurring bills with due dates feed each plan automatically; and the app shows what every account balance will be once the plan is carried out.
 
-Both modes use the same `budget_allocation` table. Only the calculation and the UI differ.
+### Decisions the owner made (do not re-litigate)
+| Question | Answer |
+|---|---|
+| Pay schedule | Regular rhythm, but **the amount and date are typed in for every paycheck**. The schedule only predicts the next payday (to pre-fill the date and to know which bills fall before the next paycheck). |
+| What allocating does | **Plan first, then confirm.** Lines start as planned; ticking a line creates the real transaction and updates balances; unticking removes it. |
+| Bills | **Recurring bills with due dates** (gym on the 16th, rent on the 1st, Netflix on the 9th, card minimum payment…). The planner auto-suggests the ones due before the next paycheck. |
+| Leftover money | **It's spending money.** Unassigned pay stays in checking as a "Spending money" line so the owner knows what they can spend until the next paycheck. Not forced to zero. |
+| The existing monthly budget | **Replace it entirely.** Remove the month view, the `budget_allocation` table, the envelope/limits engine and the "budget style" setting. |
+| Everything else already built | **Keep it.** Ledger, import, bank sync, rules, reconciliation, reports, PWA, deploy, friends' accounts all stay. Confirmed plan lines become ordinary transactions in that ledger. |
+| Onboarding | First sign-in collects current financial status: **checking balance, savings balance(s), debts (cards/loans: amount owed), and the income schedule** (frequency, typical take-home amount, next payday). |
 
-## Data model (`src/lib/server/db/schema.ts`)
-General rules:
-- Money is always an **integer number of cents** (`amount_minor`), never a float.
-- Every domain table has `user_id`.
-- Categories and accounts are soft-deleted with `archived_at`.
+### Intended outcome
+Opening the app on a phone shows: the next (or current) paycheck's plan with "Left to allocate", a checklist of where the money goes, projected balances after the plan, the bills due before the next paycheck, and current account balances. Creating a new paycheck takes four taps: amount, date, tick the bills it covers, allocate the rest.
 
-Tables:
-- Better Auth tables: `user`, `session`, `account`, `verification`, `passkey`. Plus `invite (code, created_by, used_by, expires_at)`.
-- `bank_connection (id, user_id, provider, access_secret_enc, last_synced_at, status, error)`. The SimpleFIN Access URL is stored encrypted with AES-256-GCM, using a key from the env secret `DATA_ENCRYPTION_KEY`.
-- `fin_account (id, user_id, connection_id?, external_id?, name, type [checking|savings|credit|cash|loan|investment], on_budget, currency, archived_at)`
-- `balance_snapshot (account_id, as_of, balance_minor)` stores the provider's balance from each sync. It is used for reconciliation and, later, net worth.
-- `category_group`, `category (id, user_id, group_id, name, sort, is_income, archived_at)`
-- `payee (id, user_id, name, normalized_name)`
-- `txn` columns:
-  - `id, user_id, account_id, date, amount_minor, payee_id, category_id?, memo`
-  - `cleared, reconciled, pending`
-  - `parent_id?`, used for split children
-  - `transfer_id?`, linking the two legs of a transfer
-  - `source [manual|csv|ofx|simplefin], external_id?, import_hash, import_batch_id?`
-  - `created_at, updated_at`
-- `budget_allocation (user_id, category_id, month 'YYYY-MM', budgeted_minor)`, unique on `(user_id, category_id, month)`
-- `rule (id, user_id, match_field, match_op, match_value, set_category_id?, set_payee_id?, priority)`
-- `import_batch (id, user_id, source, created_at, counts)` makes it possible to undo an import.
+### How this plan is executed
+Fable (this session) orchestrates. Each milestone below is handed to an **Opus implementation agent** with this file as its brief plus the milestone's section. After each milestone Fable verifies independently (runs the full check suite, reads the diff, screenshots the UI at phone width with the existing Playwright setup) before committing and pushing to `claude/vibrant-galileo-bo0ndu`, as the owner asked: **push after every task**. Nothing is merged to `main`; no PR is opened unless the owner asks.
 
-Activity and available amounts are **calculated from transactions, never stored**. That avoids drift.
+---
 
-## Project layout
+## 2. Product specification
+
+### 2.1 Vocabulary
+- **Paycheck**: one pay event. Has a date, a net amount, the account it lands in (checking), an expected next payday, and a list of **lines**.
+- **Line**: one place money from this paycheck goes. Four kinds:
+  - `savings` — transfer to a savings/cash account ("$100 to Emergency fund").
+  - `debt` — payment toward a credit card or loan account ("$150 to Visa").
+  - `bill` — one occurrence of a recurring bill ("Gym, $100, due Jan 16"). Snapshot of the bill at the time it was added, so editing or deleting the bill later doesn't rewrite history.
+  - `spending` — money earmarked for a category or just "Spending money" ("Groceries $300"). Optionally withdrawn to a cash account.
+- **Left to allocate** = paycheck amount − sum of all lines. Zero is ideal, positive means unassigned money (offered as a one-click "Spending money" line), negative means over-allocated (shown red, still allowed).
+- **Planned / done**: every line is `planned` until the owner ticks it. Ticking creates the matching ledger transaction(s) and records their id. Unticking deletes them (unless they were reconciled or were *linked* to a bank-synced transaction rather than created by the app).
+- **Paycheck received**: the first checkbox on every plan. Ticking it records the income transaction into the deposit account.
+- **Window**: a paycheck "covers" the bills due from its date up to (not including) the next payday. `[date, nextDate)`.
+- **Pay schedule**: frequency (weekly / every 2 weeks / twice a month / monthly), typical amount, a known payday to anchor the cycle, deposit account. One per user. Used only for predictions and defaults.
+- **Recurring bill**: name, amount, cadence (monthly on day N / every N weeks / yearly / one-off), first due date, optional end date, paid-from account, optional category, optional "pays off" account (for debt payments the bill targets a card/loan).
+
+### 2.2 Screens
+| Route | Purpose |
+|---|---|
+| `/welcome` | Onboarding wizard, shown once (when the user has no accounts and no pay schedule). Checking balance → savings accounts → debts → income schedule → Finish. Creates accounts with opening balances and the pay schedule. |
+| `/` (home, "Paychecks") | The current/next paycheck's plan: stats (Pay, Allocated, **Left to allocate**), checklist, "Add to plan" picker, projected balances, upcoming bills before next payday (with "in plan ✓" / "Add"), accounts snapshot, list of past paychecks with status, "New paycheck" button, uncategorized-transactions banner. |
+| `/paychecks/new` | Create a paycheck: date and next payday pre-filled from the schedule, amount pre-filled with the typical amount, deposit account, and a checklist of bills in the window (checked by default). |
+| `/paychecks/[id]` | Full plan page: edit date/amount/next payday/note, same plan components as home, delete (only when nothing is ticked). |
+| `/bills`, `/bills/[id]` | List and edit recurring bills, grouped Active / Ended, with next due date and cadence text. Link to `/categories`. |
+| `/settings/pay` | Edit the pay schedule. Settings index gets "Pay schedule" and "Categories" cards and loses "Budget style". |
+| `/reports` | Existing two reports stay; add "Where each paycheck went": per paycheck, planned vs actual for savings / debt / bills / spending / unallocated. |
+| Removed | `/budget`, `/budget/[month]`, the budget-mode setting. |
+
+Navigation order: **Paychecks** (`/`), **Bills**, Accounts, Transactions, Import, Rules, Reports, Settings, Invites (admin). Brand logo links to `/`. Active-link rule: `/` is active for `/` and `/paychecks*`; others by prefix.
+
+### 2.3 Worked example (this is also the e2e scenario)
+Onboarding: Main checking $1,000; Emergency savings $250; Visa card owes $300; paid every 2 weeks, about $2,000, next payday 2030-01-03.
+Bills: Rent $1,200 monthly on the 1st; Netflix $15.49 monthly on the 9th (category Subscriptions).
+New paycheck 2030-01-03, $2,000, next payday 2030-01-17 → Netflix (Jan 9) is pre-ticked, Rent (Feb 1) is not in the window. Left to allocate **$1,984.51**.
+Add $100 savings → Emergency (**$1,884.51**); $150 debt → Visa (**$1,734.51**); "Use $1,734.51 as spending money" (**$0.00**).
+Projected after plan: Emergency $350.00, Visa −$150.00, Main checking $2,734.51 (1,000 + 2,000 − 15.49 − 100 − 150; the spending line is earmarked, not moved).
+Tick "Paycheck received" → Main checking is really $3,000.00. Tick Netflix, savings, debt → Main checking $2,734.51, Emergency $350.00, Visa −$150.00; `/transactions?q=netflix` shows one Subscriptions expense. Untick savings → Emergency back to $250.00. Status shows "Partly confirmed".
+
+---
+
+## 3. Data model changes (`src/lib/server/db/schema.ts`)
+
+Conventions already in force: integer cents in `*Minor` columns, dates as `'YYYY-MM-DD'` strings, `userId()` helper on every domain table, `...timestamps`, soft deletes via `archivedAt` where applicable, `ValidationError` from `repo/transactions.ts` for bad input.
+
+### Remove
+- `budgetAllocation` table.
+- `user.budgetMode` column **and** the `budgetMode` entry in `additionalFields` in `src/lib/server/auth.ts` (otherwise Better Auth keeps writing the column and sign-up breaks), and its use in `src/routes/(app)/+layout.server.ts`.
+
+### Add (place after `txn`; two tables reference it)
+```ts
+export const PAY_FREQUENCIES = ['weekly', 'biweekly', 'semimonthly', 'monthly'] as const;
+
+pay_schedule        id PK, user_id (unique index: one per user), frequency, amount_minor (>0, typical net pay),
+                    anchor_date (a known payday; cycle anchor; day-of-month source for monthly),
+                    semi_day_1, semi_day_2 (semimonthly only; default 1 and 15),
+                    deposit_account_id FK fin_account (set null), income_category_id FK category (set null), timestamps
+
+export const BILL_FREQUENCIES = ['monthly', 'every_n_weeks', 'yearly', 'once'] as const;
+
+recurring_bill      id PK, user_id (index), name, amount_minor (>0), frequency,
+                    day_of_month (monthly/yearly, 1..31 clamped to month length), month_of_year (yearly, 1..12),
+                    interval_weeks (every_n_weeks, 1..52),
+                    start_date (first possible due date; weekday anchor for every_n_weeks; THE date for once),
+                    ended_at (nullable, inclusive last due date),
+                    account_id FK fin_account cascade (paid from), category_id FK category set null,
+                    pay_to_account_id FK fin_account set null (credit/loan this bill pays down), timestamps
+
+paycheck            id PK, user_id, date, amount_minor (>0), account_id FK fin_account cascade (deposit account),
+                    income_category_id FK category set null, next_date (expected next payday, nullable),
+                    income_txn_id FK txn set null (set when "Paycheck received" is ticked), note, timestamps
+                    index (user_id, date)
+
+export const LINE_KINDS = ['savings', 'debt', 'bill', 'spending'] as const;
+export const LINE_STATUSES = ['planned', 'done'] as const;
+
+paycheck_line       id PK, user_id (index), paycheck_id FK paycheck cascade (index), kind, label (snapshot text),
+                    amount_minor (>=0),
+                    from_account_id FK set null (null = the paycheck's deposit account; bills snapshot bill.account_id),
+                    to_account_id FK set null (savings/debt target; bill.pay_to_account_id; cash account for spending),
+                    category_id FK set null, bill_id FK recurring_bill set null, due_date (bill occurrence date),
+                    status default 'planned', txn_id FK txn set null,
+                    txn_origin enum('created','linked') nullable, done_at timestamp_ms nullable, sort int, timestamps
+                    index (bill_id, due_date)   -- "already in a plan" lookup
 ```
-src/lib/server/
-  db/ (schema.ts, client.ts, migrations/)
-  auth.ts                       Better Auth config (invite gate, passkeys)
-  repo/                         ALL data access; every query is scoped by userId
-  money.ts                      cents parse/format helpers
-  crypto.ts                     encrypt/decrypt secrets
-  budget/engine.ts              envelope + limits month calculations (pure functions)
-  import/ (csv.ts, ofx.ts, dedupe.ts)
-  sync/ (provider.ts interface, simplefin.ts, scheduler.ts)
-  rules/apply.ts
-src/routes/  (login, signup?invite=, budget/[month], accounts/[id], transactions, import, settings, admin/invites)
-static/manifest.webmanifest, src/service-worker.ts
-Dockerfile, fly.toml, litestream.yml, scripts/start.sh (litestream restore → migrate → litestream replicate -exec node build)
+`txn_origin` is added now even though linking arrives in the last milestone, to avoid a second migration.
+
+### Migration
+`npx drizzle-kit generate --name paycheck_planner` → `src/lib/server/db/migrations/0001_paycheck_planner.sql` (+ snapshot + journal). No renames, so no prompts. Expect 4 `CREATE TABLE`, indexes, `DROP TABLE budget_allocation`, and either `ALTER TABLE user DROP COLUMN budget_mode` or drizzle's copy-table pattern; both are fine (bundled SQLite is 3.53). Existing `budget_allocation` rows are discarded on purpose. Tests open `:memory:` and run every migration, so `npm test` validates the SQL. The Dockerfile already ships the migrations folder.
+
+---
+
+## 4. Pure logic (no database; importable from Svelte for live math)
+
+### 4.1 Date helpers — extend `src/lib/month.ts`
+Everything string-based, using `Date.UTC` under the hood (never `new Date('YYYY-MM-DD')` in local time; never compare `Date` objects).
+```ts
+isDate(s): boolean                       // /^\d{4}-\d{2}-\d{2}$/
+addDays(date, n): string
+dayDiff(from, to): number                // to − from, signed whole days
+daysInMonth(y, m): number
+makeDate(y, m, d): string                // clamps d to the month's length (31 → Feb 28/29)
+weekdayOf(date): number                  // 0 = Sunday
+dateParts(date): { y, m, d }
+```
+Optional cleanup: the importer's private `shiftDate`/`dayDiff` in `src/lib/server/import/importer.ts` can switch to these.
+
+### 4.2 `src/lib/planner/occurrences.ts` — when is a bill due?
+```ts
+interface BillSchedule { frequency; startDate; dayOfMonth?; monthOfYear?; intervalWeeks?; endedAt? }
+nextOccurrences(bill, from, to): string[]     // due dates with from <= d < to, ascending; honours startDate and endedAt (inclusive)
+nextOccurrence(bill, onOrAfter): string | null
+```
+Algorithm: monthly → for each month from month(from)−1 to month(to), candidate `makeDate(y, m, dayOfMonth)`, keep if in window and within `[startDate, endedAt]`. yearly → same per year with `monthOfYear`. every_n_weeks → `step = 7·n`, `k = max(0, ceil(dayDiff(startDate, from)/step))`, emit `startDate + k·step` while `< to`. once → `[startDate]` if in window.
+
+Table-driven tests (`occurrences.test.ts`): day 31 in Feb → `2026-02-28`; day 31 in Mar → `2026-03-31`; day 30 in leap Feb → `2028-02-29`; half-open end (due on `to` is excluded); empty window; December→January crossing; `startDate` after window start skips the first month; `endedAt` cuts later ones; two months → two dates; every 2 weeks from 2026-01-02 in [01-10, 02-10) → `01-16, 01-30`; weekly starting before the window; yearly; yearly Feb 29 in a non-leap year → Feb 28; once inside / outside window; `from > to` → `[]`; `nextOccurrence` for a passed one-off → `null`.
+
+### 4.3 `src/lib/planner/payday.ts` — when is the next paycheck?
+```ts
+interface PayScheduleInput { frequency; anchorDate; semiDay1?; semiDay2? }
+nextPayday(s, after): string              // strictly after
+paydayOnOrAfter(s, date): string
+paydaysBetween(s, from, to): string[]     // half-open
+```
+weekly/biweekly: step 7/14 from the anchor, walks forwards or backwards (an anchor in the future is fine). semimonthly: candidates `makeDate(y, m, d1)`, `makeDate(y, m, d2)` for this and next month; smallest `> after` (15/30 → Feb 28). monthly: the anchor's day-of-month, clamped per month (Jan 31 → Feb 28 → Mar 31).
+
+Tests: weekly from Fri 01-02 after 01-02 → 01-09; after 01-05 → 01-09; backwards from an anchor → previous cycle date; biweekly after 01-15 → 01-16, after 01-16 → 01-30; far-future anchor resolves to the right cycle date; semimonthly 1/15 and 15/30 boundaries; monthly 31st clamping forward and back; `paydaysBetween`; `paydayOnOrAfter` returns the date itself when it is a payday.
+
+### 4.4 `src/lib/planner/plan-math.ts` — totals and projections
+```ts
+interface PlanLine { kind; amountMinor; status; fromAccountId: string|null; toAccountId: string|null }
+planTotals(paycheck, lines): { allocated, left, doneCount, plannedCount, byKind: Record<kind, number> }
+projectBalances(paycheck: { accountId, amountMinor, incomeConfirmed }, lines, balances: Map<accountId, number>)
+  : Map<accountId, { before, after }>
+```
+Projection rules: if income is not yet confirmed, `+amount` on the deposit account. For every **planned** line: `from = fromAccountId ?? deposit`; `from −= amount`; if `toAccountId`, `to += amount`. Done lines and a confirmed paycheck change nothing (they are already in the real balances). **Spending lines with no cash account do not change any projection**: the money physically stays in checking and ticking them creates no transaction, so the projected checking balance must not drop when they are ticked (this is what makes §2.3's $2,734.51 correct). The UI shows that earmarked amount separately as "Spending money until next payday". Accounts missing from `balances` count as 0.
+
+Tests: the §2.3 numbers; over-allocation gives negative `left`; no lines → `left = amount`; done lines are inert; bill paid from the credit card moves the card, not checking; card payment line moves checking down and card up; spending to a cash account moves money to cash.
+
+---
+
+## 5. Server layer
+
+### 5.1 Small changes to existing code
+| File | Change |
+|---|---|
+| `src/lib/server/repo/transactions.ts` | `export` `assertCategory`; move `uncategorizedSummary` here from `repo/budget.ts` (the home page still shows the banner). |
+| `src/lib/server/repo/accounts.ts` | New `createAccountWithOpeningBalance(db, userId, input, balanceMinor, date = today())` extracted from `src/routes/(app)/accounts/+page.server.ts` (sign flip for credit/loan, payee "Starting balance", income category only when `onBudget`, `cleared: true`). The route calls it. |
+| `src/lib/safe-redirect.ts` (+ test) | Fallback `/` instead of `/budget`. |
+| `src/routes/(auth)/signup/+page.server.ts` | Redirect to `/`. Delete `src/routes/+page.server.ts` (home moves into `(app)`). |
+| `src/routes/(app)/+layout.svelte` | New nav list; exact-match rule for `/`. |
+| `src/routes/(app)/+layout.server.ts` | Stop returning `budgetMode`. |
+| `src/routes/(app)/settings/*` | Remove the "Budget style" section and action; add "Pay schedule" and "Categories" cards; update delete-account copy. |
+| `src/routes/(app)/categories/+page.svelte` | Back link → `/bills`. |
+| `static/manifest.webmanifest` | `start_url: "/"`, description "Paycheck planning for you and a few friends". |
+| `src/routes/privacy/+page.svelte`, `README.md`, `docs/plan.md` | Wording: paycheck plans and bills instead of budgets. |
+| `package.json` | Pre-existing bug: `start` references `scripts/migrate.js`, which doesn't exist. Set `"start": "node build"` (migrations run when the app opens the database). |
+| Delete | `src/routes/(app)/budget/**`, `src/lib/server/budget/engine.ts` + test, `src/lib/server/repo/budget.ts`, `e2e/budget.test.ts`, the "budget month" block and `setBudgeted` import in `src/lib/server/repo/ledger.test.ts`. |
+
+### 5.2 `src/lib/server/repo/pay-schedule.ts`
+`getPaySchedule(db, userId)`, `upsertPaySchedule(db, userId, input)`, `defaultIncomeCategoryId(db, userId)` (the seeded "Paycheck" income category, else any income category). Validation: frequency in enum; amount safe int > 0; anchor is a date; semimonthly needs two distinct days 1..31; deposit account must belong to the user (`getAccount`).
+
+### 5.3 `src/lib/server/onboarding.ts`
+```ts
+interface OnboardingInput {
+  checking: { name; balanceMinor };
+  savings: { name; balanceMinor }[];
+  debts: { name; type: 'credit'|'loan'; owedMinor }[];
+  pay: { frequency; amountMinor; anchorDate; semiDay1?; semiDay2? };
+}
+completeOnboarding(db, userId, input): { checkingId }   // one db.transaction
+needsOnboarding(db, userId): boolean                      // no schedule AND no accounts (archived included)
 ```
 
-## Milestones (each is one or more commits pushed to `claude/vibrant-galileo-bo0ndu`)
-1. **Scaffold.** Set up SvelteKit + TS, Tailwind, Drizzle + SQLite, Vitest, Playwright, ESLint/Prettier, and a CI workflow (`.github/workflows/ci.yml`: lint, typecheck, test).
-2. **Auth.**
-   - Better Auth with email+password and passkeys.
-   - Invite-only signup: the first user becomes admin, and the admin page generates invite links.
-   - A `hooks.server.ts` guard on all non-auth routes.
-3. **Core ledger.**
-   - Accounts CRUD.
-   - Manual transaction entry and an editable transaction list.
-   - Transfers (paired legs).
-   - Splits, where the children must sum to the parent and this is enforced in the repo layer.
-   - `money.ts` with tests.
-4. **Categories + budget screen.**
-   - Category groups and categories, with a default category set seeded on signup.
-   - Month view with budgeted / activity / available per category.
-   - To Budget header and month navigation.
-   - Mode toggle (envelope or limits).
-   - `budget/engine.ts` with thorough unit tests: rollover, overspend, income, future months.
-5. **Import.**
-   - CSV upload with a column-mapping step saved per account, plus OFX/QFX parsing.
-   - Dedupe:
-     1. Match on `external_id` first.
-     2. Then on `import_hash` = hash(account, date, amount, normalized description, occurrence index).
-     3. Then fuzzy match (±3 days, same amount, similar payee) against manual entries.
-   - Undo an import batch.
-6. **SimpleFIN sync.**
-   - Settings page where the user pastes their setup token. The app claims the Access URL and stores it encrypted.
-   - The user maps SimpleFIN accounts to app accounts.
-   - Sync pulls transactions (posted only, or pending updated by ID) and records a balance snapshot.
-   - An in-process scheduler (every 6h) plus a "Sync now" button. Errors are shown on the connection.
-7. **Rules.** Payee normalization and "if description contains X → category Y" rules, applied on import and sync. Offer "create rule from this transaction".
-8. **Reconciliation + reports.** Reconcile an account against a statement balance (cleared sum vs entered balance) and show drift against the provider balance. Reports: spending by category per month, and income vs expense (simple SVG/Chart.js).
-9. **PWA + polish.** Manifest, icons, a service worker caching the shell and the last-viewed budget for offline reading, and a responsive pass at phone width.
-10. **Deploy.**
-    - Dockerfile and `fly.toml` with a volume mounted at `/data`.
-    - Litestream to R2.
-    - Secrets: `BETTER_AUTH_SECRET`, `DATA_ENCRYPTION_KEY`, R2 credentials.
-    - A documented restore drill in `README.md`, and a one-page privacy note for friends covering what's stored, who can see it, and how to delete it.
+### 5.4 `src/lib/server/repo/bills.ts`
+`listBills({ includeEnded, asOf })` (joins account/category/pay-to names, adds `nextDue`), `getBill`, `createBill`, `updateBill`, `endBill(id, endedAt)`, `deleteBill`, and
+`billsDueBetween(db, userId, from, to): BillOccurrence[]` — expands every active bill with `nextOccurrences`, left-joins `paycheck_line` on `(bill_id, due_date)` so each occurrence carries `plannedLineId`/`plannedPaycheckId`, sorted by due date then name.
+Validation: name required; amount > 0; per-frequency fields present and in range; `endedAt >= startDate`; paid-from account owned; category via `assertCategory`; pay-to account owned, of type credit/loan, and not the same as paid-from.
+`deleteBill`: delete this user's **planned** lines for the bill, then the bill; **done** lines keep their snapshot and get `bill_id = null` through the FK.
 
-**Later (not in MVP):** recurring transactions/schedules, goals, net worth chart, Plaid Trial provider, optional LLM categorization (only for transactions the rules don't categorize, cached per merchant, with consent), shared household budgets.
+### 5.5 `src/lib/server/repo/paychecks.ts`
+```ts
+createPaycheck(db, userId, input, { billOccurrences? })      // nextDate defaults to nextPayday(schedule, date) or date+14
+updatePaycheck(db, userId, id, patch)                          // if income txn exists, updateTransaction keeps it in sync
+deletePaycheck(db, userId, id)                                 // refuses while anything is ticked
+addLine / updateLine / removeLine                              // update/remove refuse on done lines
+allocateLeftover(db, userId, paycheckId, label = 'Spending money', categoryId?)   // adds a spending line for left > 0
+confirmIncome / unconfirmIncome                                // +amount income txn on the deposit account, payee "Paycheck", date = paycheck.date
+confirmLine(db, userId, lineId, date) / unconfirmLine
+getPaycheck(db, userId, id): PaycheckDetail                    // lines with names, totals, projected balances, billsDue in the window, spent-so-far per spending line
+listPaychecks(db, userId, { limit = 24 }): PaycheckSummary[]  // status: planned | partial | confirmed
+pickHomePaycheck(summaries, today)                             // pure: first unconfirmed or future plan, else the latest
+suggestNextPaycheck(db, userId, today)                         // from the schedule; skips dates that already have a paycheck
+```
+Line rules:
+- `savings`: `toAccountId` required, owned, not credit/loan, not the deposit account.
+- `debt`: `toAccountId` required, type credit or loan.
+- `bill`: `billId` + `dueDate` required; snapshot label/amount/from/to/category from the bill; reject a duplicate `(billId, dueDate)` anywhere in this user's plans ("That bill is already in a plan").
+- `spending`: label required (defaults to the category name); optional `toAccountId` must be a `cash` account.
+- All: amount is a safe integer ≥ 0; `sort = max + 1`.
 
-## Security essentials
-- No bank credentials are ever stored. Only SimpleFIN Access URLs are kept, and they are encrypted at the application level.
-- A single `repo/` layer forces `userId` scoping. Tests attempt cross-user reads and must fail them.
-- Secure httpOnly cookies, SvelteKit CSRF origin check and rate-limited login.
-- Logs never contain amounts, payees or access URLs.
-- Backups are encrypted at the bucket level, and the R2 credential is used only for backups.
+Confirming (one transaction each):
+- savings / debt / bill-with-pay-to / spending-to-cash → `createTransaction({ accountId: from, date, amountMinor: −amount, transferAccountId: to, categoryId, memo: label })`. The existing `transferLegCategory` keeps the category on the checking leg only when the target is off-budget (loan/investment).
+- bill without pay-to → `createTransaction({ accountId: from, date: dueDate, amountMinor: −amount, payeeName: label, categoryId })`.
+- spending without a cash account → **no transaction**. Ticking marks the envelope acknowledged. Reason: the real spending arrives as many synced/manual transactions; a lump −$300 on payday would double-count and make checking wrong. Instead `getPaycheck` returns `spentMinor` for each spending line with a category: the sum of expense transactions in that category dated in `[paycheck.date, nextDate)`, shown as "spent $84.20 of $300.00" with a thin progress bar.
+- Dates: bills use their `dueDate`, income uses `paycheck.date`, everything else the `date` passed by the action (`today()`).
+- Unticking: refuse if the created transaction is `reconciled`; `deleteTransaction` removes both transfer legs; a transaction already deleted from the ledger (FK set null) just resets the line; a `linked` transaction is never deleted, only unlinked.
 
-## Verification
-- `npm run check && npm run lint && npm test` must pass on every milestone. CI runs the same checks.
-- **Unit tests:**
-  - `money.ts`
-  - `budget/engine.ts`: table-driven cases for rollover, overspend and limits mode
-  - `import/dedupe.ts`: re-importing the same CSV adds 0 rows, and overlapping files dedupe
-  - `crypto.ts` round-trip
-  - The repo layer's user isolation
-- **SimpleFIN:** an integration test against a mocked SimpleFIN `/accounts` JSON fixture. Then a manual test with your real SimpleFIN token.
-- **Playwright e2e scenario:**
-  1. Sign up via invite and create an account.
-  2. Import a sample CSV and assign money to categories.
-  3. Overspend a category and confirm the next month's To Budget is reduced.
-  4. A second user cannot see the first user's data.
-- **Deploy:** `fly deploy`, sign in from a phone, and install the PWA. Then destroy and recreate the machine and confirm Litestream restores the data.
-- **Cost check:** Fly invoice about $2–3/mo plus SimpleFIN $1.25/mo, under $5.
+### 5.6 Forms and actions
+`src/lib/server/forms.ts`: add `parseBillForm`, `parsePaycheckForm` (bills arrive as checkbox values `billId|dueDate`), `parseLineForm`, `parseOnboardingForm` (savings/debts as hidden JSON, same pattern as `splits` in `TransactionForm.svelte`), `parsePayScheduleForm`. All use `parseMoney`, amounts entered positive, throw `ValidationError`.
+`src/lib/server/paycheck-actions.ts`: `confirmLine`, `unconfirmLine`, `confirmIncome`, `unconfirmIncome`, `addLine`, `updateLine`, `removeLine`, `allocateLeftover` — each `requireUserId` + `handleValidation`, exactly like `transactionActions` in `page-helpers.ts`. Spread into both `/` and `/paychecks/[id]`.
+
+### 5.7 Reports — `src/lib/server/repo/reports.ts`
+`paycheckBreakdown(db, userId, limit = 12)`: per paycheck `{ id, date, amountMinor, planned: { savings, debt, bills, spending }, actual: same from done lines (|txn amount| when a txn exists, else the line amount), unallocated }`.
+
+### 5.8 Linking bank-synced transactions (last milestone)
+`suggestLineMatches(db, userId, paycheckId)`: for each planned line, candidate transactions on the `from` account with amount `−line.amountMinor`, dated within ±3 days of the expected date (due date or paycheck date), `source ∈ {csv, ofx, simplefin}`, not already referenced by any line or paycheck; transfer lines also need a matching candidate on the `to` account. `linkLine(db, userId, lineId, txnId)` sets `done`, `txnOrigin = 'linked'`. `suggestIncomeMatch` does the same for the paycheck (+amount, income category or uncategorized). No changes to `sync.ts`.
+
+---
+
+## 6. UI
+
+Reuse: `Money.svelte` (`colored`), `CategorySelect.svelte`, `TransactionList.svelte`, `parseMoney`/`centsToInput`/`formatMoney`, `handleValidation`/`requireUserId`/`loadFormOptions`, the submit-on-change amount input pattern from the old budget page, the hidden-JSON repeatable rows pattern from `TransactionForm.svelte`. Mobile-first: one column on phones, two on `md`. The existing nav wraps on phones; nine links fit in two rows (verified in the October screenshots).
+
+New components in `src/lib/components/`:
+- `PaycheckPlan.svelte` — header ("Paycheck · Fri Jan 3 · $2,000.00"), three stats with `data-testid="left-to-allocate"` (green at 0, amber > 0, red < 0 with "Over-allocated by $X"), the checklist: "Paycheck received" row, then one row per line (checkbox form, label + sub-text like "to Emergency fund" / "due Jan 9 · Subscriptions" / "Visa payment" / "spent $84.20 of $300.00", amount input while planned or `Money` + link to `/transactions/{txnId}` once done, ✕ remove), footer "Use $X leftover as spending money" when `left > 0` and "Every dollar has a job" at 0.
+- `AddLinePicker.svelte` — four segmented buttons (Savings / Debt / Bill / Spending) with the matching fields; bills offered are the window's occurrences not yet planned, amount pre-filled.
+- `ProjectedBalances.svelte` — account · now · after, deposit account first, then touched accounts, then the rest; a footer line "Spending money until next payday: $X" (sum of planned spending lines with no cash account), since that money stays in checking.
+- `UpcomingBills.svelte` — bills due before the next payday with "In plan ✓" or "Add".
+- `PaycheckList.svelte` — past/future paychecks with status pill (Planned / Partly confirmed / Confirmed) and left-to-allocate if ≠ 0.
+- `BillForm.svelte` — frequency-driven fields; "Paid from" account; `CategorySelect`; "Pays off" select of credit/loan accounts.
+
+Onboarding (`/welcome`): four cards (Checking; Savings with "+ Add savings account"; Debts with name / type / amount owed; Income with frequency, "Take-home pay", "Next payday" defaulting to today, two day inputs when semimonthly). Accessible labels used by tests: "Checking balance", "Take-home pay", "Next payday", "Pay frequency". Only the **home page** redirects to `/welcome` (when `needsOnboarding`), so no existing flow gets trapped; `/welcome` redirects home once done. Users who have accounts but no schedule see a "Set up your pay schedule" card on the home page linking to `/settings/pay`.
+
+`/paychecks/new`: GET params `?date=&next=` drive the bill checklist (a "Refresh bills" GET button like the reports filter) so changing the date updates which bills are offered; `create` action → `/paychecks/[id]`.
+
+---
+
+## 7. Milestones
+
+Each milestone ends with `npm run check && npm run lint && npm test && npm run test:e2e` green (Playwright with `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium`), one commit, one push to `claude/vibrant-galileo-bo0ndu`. Each is delegated to an Opus agent with this file + the milestone text; Fable reviews the diff and screenshots before committing.
+
+**M1 — Remove the monthly budget; add schema and pure logic.**
+Schema edits (§3), migration, `budgetMode` removal in `auth.ts` + layout, deletions and small changes from §5.1, `package.json` start fix. Temporary home: `src/routes/(app)/+page.server.ts` redirecting to `/accounts`; e2e `helpers.ts`/`auth.test.ts`/`pwa.test.ts` updated to expect `/accounts` and its heading. Add §4 modules with their tests. Nav loses "Budget". Commit: "Replace the monthly budget with paycheck-planner schema and date logic".
+
+**M2 — Server layer.**
+§5.2–5.6 (pay schedule, onboarding, bills, paychecks, forms, actions) with Vitest coverage: onboarding creates the right accounts/schedule and `needsOnboarding` flips; bill validation matrix; `billsDueBetween` marks planned occurrences; `deleteBill` keeps done lines; the full §2.3 flow through the repo functions, including untick restoring balances and status transitions; refusals (edit a done line, delete a ticked paycheck, untick a reconciled txn); `updatePaycheck` after income confirmed updates the txn; isolation (a second user cannot read or touch anything, and cannot point a line at the first user's account). Commit.
+
+**M3 — Onboarding, pay-schedule settings, home skeleton.**
+`/welcome`, `/settings/pay`, settings cards, home load with the onboarding redirect, accounts snapshot, schedule card, empty state "No paycheck planned yet → New paycheck", nav (Paychecks/Bills), manifest. e2e helpers: `loginAsAdmin` tolerates landing on `/welcome`; `auth.test.ts` sign-up expects `/welcome`. Commit.
+
+**M4 — Bills.**
+`/bills`, `/bills/[id]`, `BillForm.svelte`, categories back link. Start `e2e/planner.test.ts` (serial): sign in as the *friend* account created by `auth.test.ts` (fresh, so onboarding runs) → onboarding from §2.3 → add Rent and Netflix → list shows next due dates. Commit.
+
+**M5 — Paychecks.**
+`/paychecks/new`, `/paychecks/[id]`, home planner components, confirm/unconfirm, leftover, spent-so-far. e2e part 2: the rest of §2.3 with exact dollar assertions on `left-to-allocate`, projected balances, real balances after ticking, the Netflix transaction, untick, status pill. Commit.
+
+**M6 — Reports, PWA, docs, isolation.**
+`paycheckBreakdown` + report section (table + thin stacked bars in the existing style); `pwa.test.ts` moves to `/` and asserts on `left-to-allocate` (or a stable `data-testid="home"`); README feature list and "Where things live" (`src/lib/planner/`), `docs/plan.md` status note, privacy copy. e2e part 3: admin sees no friend bills, `/paychecks/<friend id>` is a 404, admin's home shows the "Set up your pay schedule" card; complete it so later tests have a planner at `/`. Commit.
+
+**M7 — Link synced transactions.**
+§5.8 with tests (a synced −$15.49 within 3 days of Netflix's due date is suggested; linking marks done without creating a txn; unticking unlinks without deleting). UI: a muted "Looks paid on Jan 9 — link" chip on the line and on the "Paycheck received" row. Commit.
+
+---
+
+## 8. Edge cases (decided)
+- **Bill deleted while planned**: its planned lines go; done lines keep their snapshot.
+- **Paycheck amount/date edited after lines exist**: allowed; left-to-allocate recomputes; an existing income transaction is updated.
+- **Bill paid from a credit card**: the card balance moves, checking doesn't; projection shows it. A bill with a pay-to account (card minimum) is a transfer checking → card.
+- **Debt/savings into an off-budget account** (loan, investment): the checking leg keeps the optional category.
+- **Leftover**: positive → one-click spending line; negative → red warning but confirming still allowed; zero → "Every dollar has a job".
+- **Two paychecks on one date** are allowed (two jobs); a bill occurrence can be in only one plan.
+- **Windows are half-open**: a bill due on the next payday belongs to the next paycheck. With no schedule, `nextDate` defaults to +14 days and is editable.
+- **Archived accounts** referenced by bills/plans still work; hard-deleting an account cascades.
+- **Dates and time zones**: all "today" values come from `today()` in `src/lib/month.ts`; all planner math is string-based.
+- **Offline**: plan pages are cached like any page; ticking needs the network (unchanged).
+- **Security**: every new repo function takes `userId` and scopes every query; cross-user tests are mandatory in M2; no new secrets.
+
+## 9. Verification checklist (Fable runs this after each milestone and at the end)
+1. `npm run check && npm run lint && npm test && PW_CHROMIUM_PATH=/opt/pw-browsers/chromium npm run test:e2e` green locally; GitHub Actions green on the pushed commit (both `check` and `docker` jobs).
+2. Build and run the production bundle with a scratch SQLite file, seed the §2.3 scenario through the UI with Playwright, and screenshot `/`, `/paychecks/[id]`, `/bills`, `/welcome` at 390×844 and 1200×900. Check: no horizontal scroll, every nav item reachable, dollar figures match §2.3.
+3. Open a fresh database: first sign-up lands on `/welcome`; finishing lands on `/` with the accounts snapshot.
+4. Confirm the migration applies to a database created by the October version (copy of the old schema with a `budget_allocation` row) without error.
+5. Final: README deploy section still accurate; `docs/plan.md` carries this plan's status; `git status` clean; branch pushed.
