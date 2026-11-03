@@ -1,13 +1,15 @@
 <main class="prose mx-auto max-w-2xl px-4 py-10 text-sm leading-6">
 	<h1 class="mb-4 text-xl font-semibold">What this app stores</h1>
 	<p class="mb-3">
-		This is a small, invite-only budgeting app run by one person for themselves and a few friends.
-		It is not a company and offers no guarantees.
+		This is a small, invite-only paycheck-planning app run by one person for themselves and a few
+		friends. It is not a company and offers no guarantees.
 	</p>
 	<h2 class="mt-6 mb-2 font-semibold">What is stored</h2>
 	<ul class="mb-3 list-disc pl-5">
 		<li>Your name, email, a hashed password and any passkeys you register.</li>
-		<li>Accounts, transactions, categories, budgets and rules you create or import.</li>
+		<li>
+			Accounts, transactions, categories, paycheck plans and bills, and rules you create or import.
+		</li>
 		<li>
 			If you connect SimpleFIN: the SimpleFIN access URL, encrypted. Your bank username and password
 			are never seen or stored by this app.

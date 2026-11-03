@@ -1,17 +1,19 @@
 # Budgeting
 
-A small, self-hosted envelope budgeting web app for me and a few friends.
+A small, self-hosted paycheck planner for me and a few friends: before each payday, decide where every dollar of it will go, then tick things off as the money actually moves.
 
 **What it does**
 
-- Two budgeting styles, chosen per user in Settings:
-  - **Envelope (zero-based):** give every dollar a job. Leftovers roll over, and overspending comes out of next month.
-  - **Monthly limits:** a cap per category, with no rollover.
+- **Plan each paycheck.** Enter the amount and date, then split it into savings, debt payments, bills and spending money. "Left to allocate" shows what still needs a job, and any leftover becomes spending money in one click.
+- **Bills with due dates.** Recurring bills (monthly, every few weeks, yearly or one-off) land in the plan for the paycheck that comes before them, so you see what is due before the next payday.
+- **Tick to confirm.** Every line starts as planned. Ticking it records the real transaction or transfer, and unticking removes it again.
+- **Projected balances.** See what each account will hold once the plan is carried out, next to what it holds now.
+- A pay schedule (weekly, every 2 weeks, twice a month or monthly) that predicts the next payday, and a short set-up wizard for new users.
 - Accounts, transactions, transfers and split transactions.
 - Bank sync through [SimpleFIN Bridge](https://bridge.simplefin.org), about $15/year per person.
 - CSV/OFX/QFX import, with automatic duplicate detection.
 - Rules that categorize transactions automatically, and reconciliation against bank statements.
-- Reports, plus an installable phone app (PWA) that can show your budget offline.
+- Reports (including where each paycheck went), plus an installable phone app (PWA) that can show your plans offline.
 - Invite-only accounts, with passwords or passkeys. Each person sees only their own data.
 
 **Stack:** SvelteKit, TypeScript, SQLite (Drizzle ORM), Better Auth and Tailwind. It runs on Fly.io, with Litestream backing the database up to Cloudflare R2.
@@ -39,15 +41,23 @@ Migrations run automatically when the app opens the database.
 ### Where things live
 
 ```
-src/lib/money.ts                 cents parsing/formatting (money is always integer cents)
-src/lib/import/                  CSV + OFX parsers (shared by browser preview and server)
-src/lib/server/db/schema.ts      all tables
-src/lib/server/repo/             data access — every query is scoped by user id
-src/lib/planner/                 paycheck-planner date and plan math (pure functions)
-src/lib/server/import/           importer with dedupe, payee clean-up
-src/lib/server/rules/            categorization rules
-src/lib/server/sync/             SimpleFIN client, sync, background scheduler
-src/routes/(app)/                signed-in pages
+src/lib/money.ts                    cents parsing/formatting (money is always integer cents)
+src/lib/month.ts                    date helpers (dates are 'YYYY-MM-DD' strings)
+src/lib/planner/                    pure paycheck-planner logic: bill due dates, next payday, plan totals
+src/lib/import/                     CSV + OFX parsers (shared by browser preview and server)
+src/lib/components/                 shared UI, including the paycheck plan, picker and projections
+src/lib/server/db/schema.ts         all tables
+src/lib/server/repo/                data access — every query is scoped by user id
+  paychecks.ts                      paycheck plans and their lines; tick/untick
+  bills.ts                          recurring bills and the occurrences due in a window
+  pay-schedule.ts                   each user's pay schedule
+  reports.ts                        reports, including where each paycheck went
+src/lib/server/onboarding.ts        the set-up wizard (first accounts and pay schedule)
+src/lib/server/paycheck-actions.ts  form actions shared by the home page and plan pages
+src/lib/server/import/              importer with dedupe, payee clean-up
+src/lib/server/rules/               categorization rules
+src/lib/server/sync/                SimpleFIN client, sync, background scheduler
+src/routes/(app)/                   signed-in pages (home `/` is the paycheck planner)
 ```
 
 ## Deploying to Fly.io (about $2–3/month)
@@ -126,4 +136,4 @@ Check current prices before relying on them; they come from the research done in
 
 ## Privacy
 
-Friends can see what is stored and who can see it at `/privacy`. They can delete everything themselves under **Settings → Delete my account**.
+Friends can see what is stored (accounts, transactions, paycheck plans and bills) and who can see it at `/privacy`. Nobody else using the app can see another person's plans, bills or accounts. Each person can delete everything themselves under **Settings → Delete my account**.

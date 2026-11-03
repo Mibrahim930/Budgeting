@@ -1,5 +1,7 @@
 # Plan: Turn "Budgeting" into a paycheck planner
 
+> **Status (November 2026):** milestones M1–M6 are implemented and pushed; M7 (linking bank-synced transactions to plan lines) is in progress.
+
 ## 1. Context
 
 ### Where we are

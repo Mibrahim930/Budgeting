@@ -1,7 +1,7 @@
 import { addMonths, currentMonth, isMonth } from '$lib/month';
 import { getDb } from '$lib/server/db/client';
 import { requireUserId } from '$lib/server/page-helpers';
-import { incomeVsSpending, spendingByCategory } from '$lib/server/repo/reports';
+import { incomeVsSpending, paycheckBreakdown, spendingByCategory } from '$lib/server/repo/reports';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ locals, url }) => {
@@ -17,6 +17,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
 		span,
 		from,
 		spending: spendingByCategory(db, userId, from, month),
-		trend: incomeVsSpending(db, userId, month, 12)
+		trend: incomeVsSpending(db, userId, month, 12),
+		paychecks: paycheckBreakdown(db, userId)
 	};
 };

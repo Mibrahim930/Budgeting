@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { admin } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -193,4 +194,54 @@ test('a paycheck is planned, allocated and ticked off', async ({ page }) => {
 		'href',
 		`/paychecks/${paycheckId}`
 	);
+});
+
+// Part 3 (M6): another user sees none of this
+test("the admin cannot see the friend's bills or plans, and sets up a pay schedule", async ({
+	page
+}) => {
+	expect(paycheckId).not.toBe('');
+	await signIn(page);
+	await page.goto('/settings');
+	await page.getByRole('button', { name: 'Sign out' }).click();
+	await expect(page).toHaveURL(/\/login/);
+
+	await page.getByLabel('Email').fill(admin.email);
+	await page.getByLabel('Password').fill(admin.password);
+	await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+	// The admin has accounts (from the import test) but no pay schedule, so no wizard.
+	await expect(page).toHaveURL(/\/$/);
+
+	await page.goto('/bills');
+	await expect(page.getByRole('heading', { name: 'Bills' })).toBeVisible();
+	await expect(page.getByText('suggested automatically')).toBeVisible();
+	// Case-sensitive: the page's own help text mentions "rent".
+	await expect(page.locator('main')).not.toContainText(/\bRent\b|Netflix/);
+	await expect(page.getByRole('list', { name: 'Active bills' }).getByRole('listitem')).toHaveCount(
+		0
+	);
+
+	const response = await page.goto(`/paychecks/${paycheckId}`);
+	expect(response?.status()).toBe(404);
+	await expect(page.getByText('Main checking')).toHaveCount(0);
+
+	await page.goto('/');
+	const home = page.getByTestId('home');
+	await expect(home.getByText('Set up your pay schedule')).toBeVisible();
+	await home.getByRole('link', { name: 'Set up pay schedule' }).click();
+	await expect(page).toHaveURL(/\/settings\/pay$/);
+	await page.getByLabel('Pay frequency').selectOption('biweekly');
+	await page.getByLabel('Take-home pay').fill('1500');
+	const now = new Date();
+	const todayDate = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
+		.map((n) => String(n).padStart(2, '0'))
+		.join('-');
+	await page.getByLabel('Next payday').fill(todayDate);
+	await page.getByRole('button', { name: 'Save pay schedule' }).click();
+	await expect(page.getByText('Pay schedule saved.')).toBeVisible();
+
+	await page.goto('/');
+	await expect(page.getByTestId('home')).toBeVisible();
+	await expect(page.getByText('Set up your pay schedule')).toHaveCount(0);
+	await expect(page.getByText('No paycheck planned yet')).toBeVisible();
 });
