@@ -13,6 +13,7 @@ import {
 } from '../db/schema';
 import { newId } from '../id';
 import { getAccount } from './accounts';
+import { syncBillIntoPlans, type AddedBillLine } from './bill-sync';
 import { assertCategory, ValidationError } from './transactions';
 
 export type BillRow = typeof recurringBill.$inferSelect;
@@ -101,26 +102,49 @@ export function getBill(db: Db, userId: string, id: string): BillRow | undefined
 		.get();
 }
 
-export function createBill(db: Db, userId: string, input: BillInput): string {
+/**
+ * Create a bill and add its due dates to every open plan whose window contains them.
+ * Returns the bill id and the lines that were added.
+ */
+export function createBillAndPlan(
+	db: Db,
+	userId: string,
+	input: BillInput
+): { id: string; added: AddedBillLine[] } {
 	const values = billValues(db, userId, input);
 	const id = newId();
-	db.insert(recurringBill)
-		.values({ id, userId, ...values })
-		.run();
-	return id;
+	return db.transaction((tx) => {
+		const t = tx as unknown as Db;
+		t.insert(recurringBill)
+			.values({ id, userId, ...values })
+			.run();
+		return { id, added: syncBillIntoPlans(t, userId, id) };
+	});
 }
 
-/** Edit a bill. Lines already in plans keep their snapshot. */
+/** Create a bill (added to open plans as `createBillAndPlan` does). Returns its id. */
+export function createBill(db: Db, userId: string, input: BillInput): string {
+	return createBillAndPlan(db, userId, input).id;
+}
+
+/**
+ * Edit a bill. Its planned lines follow the change (moved, refreshed or added to open plans);
+ * ticked lines keep their snapshot.
+ */
 export function updateBill(db: Db, userId: string, id: string, input: BillInput) {
 	if (!getBill(db, userId, id)) throw new ValidationError('Bill not found');
 	const values = billValues(db, userId, input);
-	db.update(recurringBill)
-		.set(values)
-		.where(and(eq(recurringBill.id, id), eq(recurringBill.userId, userId)))
-		.run();
+	db.transaction((tx) => {
+		const t = tx as unknown as Db;
+		t.update(recurringBill)
+			.set(values)
+			.where(and(eq(recurringBill.id, id), eq(recurringBill.userId, userId)))
+			.run();
+		syncBillIntoPlans(t, userId, id);
+	});
 }
 
-/** Stop a bill: `endedAt` is its last due date (inclusive). */
+/** Stop a bill: `endedAt` is its last due date (inclusive). Later planned lines are removed. */
 export function endBill(db: Db, userId: string, id: string, endedAt: string) {
 	const bill = getBill(db, userId, id);
 	if (!bill) throw new ValidationError('Bill not found');
@@ -128,10 +152,15 @@ export function endBill(db: Db, userId: string, id: string, endedAt: string) {
 	if (endedAt < bill.startDate) {
 		throw new ValidationError('End date cannot be before the first due date');
 	}
-	db.update(recurringBill)
-		.set({ endedAt })
-		.where(and(eq(recurringBill.id, id), eq(recurringBill.userId, userId)))
-		.run();
+	db.transaction((tx) => {
+		const t = tx as unknown as Db;
+		t.update(recurringBill)
+			.set({ endedAt })
+			.where(and(eq(recurringBill.id, id), eq(recurringBill.userId, userId)))
+			.run();
+		// Planned lines after the last due date are no longer occurrences, so they go.
+		syncBillIntoPlans(t, userId, id);
+	});
 }
 
 /** Delete a bill and its still-planned lines; done lines keep their snapshot (bill_id → null). */

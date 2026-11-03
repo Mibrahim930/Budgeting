@@ -6,6 +6,7 @@
 	const links = $derived([
 		{ href: '/', label: 'Paychecks' },
 		{ href: '/bills', label: 'Bills' },
+		{ href: '/calendar', label: 'Calendar' },
 		{ href: '/accounts', label: 'Accounts' },
 		{ href: '/transactions', label: 'Transactions' },
 		{ href: '/import', label: 'Import' },

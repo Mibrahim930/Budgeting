@@ -30,7 +30,10 @@
 <div class="mb-4 flex items-center justify-between gap-2">
 	<div>
 		<h1 class="text-xl font-semibold">Bills</h1>
-		<p class="text-sm text-slate-500">Recurring bills and when they're due.</p>
+		<p class="text-sm text-slate-500">
+			Recurring bills and when they're due.
+			<a href="/calendar" class="text-teal-700 hover:underline">Calendar</a>
+		</p>
 	</div>
 	<button class="btn shrink-0" aria-expanded={showForm} onclick={() => (showForm = !showForm)}>
 		Add bill

@@ -32,7 +32,8 @@
 		accounts: { id: string; name: string; type: string }[];
 		groups: CategoryGroupOption[];
 		action: string;
-		initial?: BillValue | null;
+		/** A bill to edit, or a few fields to prefill a new one. */
+		initial?: Partial<BillValue> | null;
 		submitLabel?: string;
 		error?: string | null;
 		/** Called after the action succeeds. */
@@ -96,7 +97,7 @@
 			inputmode="decimal"
 			placeholder="0.00"
 			required
-			value={initial ? centsToInput(initial.amountMinor) : ''}
+			value={initial?.amountMinor != null ? centsToInput(initial.amountMinor) : ''}
 		/>
 	</div>
 

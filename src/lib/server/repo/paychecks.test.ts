@@ -499,7 +499,9 @@ describe('lines', () => {
 			accountId: visa,
 			categoryId: cat('Personal care')
 		});
-		const line = addLine(db, alice, p, { kind: 'bill', billId: bill, dueDate: '2030-01-04' });
+		// The open plan covers Jan 4, so creating the bill put it in the plan.
+		const line = getPaycheck(db, alice, p)!.lines.find((l) => l.billId === bill)!.id;
+		expect(getLine(db, alice, line)).toMatchObject({ dueDate: '2030-01-04', status: 'planned' });
 		expect(projected(p)).toMatchObject({ Visa: -40000, 'Main checking': 298451 });
 		confirmLine(db, alice, line, '2030-01-10');
 		expect(balance(visa)).toBe(-40000);
@@ -522,7 +524,13 @@ describe('lines', () => {
 			accountId: checking,
 			payToAccountId: visa
 		});
-		const line = addLine(db, alice, p, { kind: 'bill', billId: bill, dueDate: '2030-01-12' });
+		// The open plan covers Jan 12, so creating the bill put it in the plan.
+		const line = getPaycheck(db, alice, p)!.lines.find((l) => l.billId === bill)!.id;
+		expect(getLine(db, alice, line)).toMatchObject({
+			dueDate: '2030-01-12',
+			toAccountId: visa,
+			status: 'planned'
+		});
 		confirmLine(db, alice, line, '2030-01-03');
 		expect(balance(visa)).toBe(-26500);
 		expect(balance(checking)).toBe(96500);
