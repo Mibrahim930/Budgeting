@@ -1,5 +1,7 @@
 <script lang="ts">
+	import Donut from '$lib/components/Donut.svelte';
 	import IncomeSpendingChart from '$lib/components/IncomeSpendingChart.svelte';
+	import { KINDS } from '$lib/components/kinds';
 	import Money from '$lib/components/Money.svelte';
 	import { formatMoney } from '$lib/money';
 	import { monthLabel } from '$lib/month';
@@ -10,21 +12,78 @@
 	const maxSpent = $derived(Math.max(1, ...data.spending.map((c) => c.spent)));
 	let showTable = $state(false);
 
-	/** The four kinds of line, in bar order, with their colours. */
-	const KINDS = [
-		{ key: 'savings', label: 'Savings', color: '#2a78d6' },
-		{ key: 'debt', label: 'Debt', color: '#eb6834' },
-		{ key: 'bills', label: 'Bills', color: '#1baf7a' },
-		{ key: 'spending', label: 'Spending', color: '#eda100' }
-	] as const;
+	/** The donut shows the newest paycheck's plan by kind. */
+	const latest = $derived(data.paychecks[0] ?? null);
+	const latestAllocated = $derived(
+		latest ? KINDS.reduce((s, k) => s + latest.planned[k.key], 0) : 0
+	);
+	const allocatedText = $derived(formatMoney(latestAllocated));
 </script>
 
-<h1 class="mb-4 display">Reports</h1>
+<p class="eyebrow">Reports</p>
+<h1 class="mb-4 display">Where it went</h1>
+
+<div class="mb-4 grid gap-4 md:grid-cols-2">
+	{#if latest}
+		<section class="card-raised" aria-labelledby="latest-paycheck">
+			<h2 id="latest-paycheck" class="mb-3 text-sm font-extrabold">
+				Latest paycheck ·
+				<a class="link" href="/paychecks/{latest.id}">{dateLabel(latest.date)}</a>
+			</h2>
+			<div class="flex items-center gap-4 sm:gap-5">
+				<Donut
+					segments={KINDS.map((k) => ({ ...k, value: latest.planned[k.key] }))}
+					total={latest.amountMinor}
+					label="{dateLabel(latest.date)} paycheck by kind: {KINDS.map(
+						(k) => `${k.label} ${formatMoney(latest.planned[k.key])}`
+					).join(', ')}, unallocated {formatMoney(latest.unallocated)}"
+				>
+					<span
+						class="block px-1 font-extrabold tabular-nums {allocatedText.length <= 8
+							? 'text-[15px]'
+							: allocatedText.length <= 10
+								? 'text-[13px]'
+								: 'text-[11px]'}">{allocatedText}</span
+					>
+					<span class="mt-1 block text-[10px] leading-tight text-muted"
+						>of {formatMoney(latest.amountMinor)}<br />assigned</span
+					>
+				</Donut>
+				<ul class="min-w-0 flex-1 space-y-2 text-xs">
+					{#each KINDS as k (k.key)}
+						<li class="flex items-center justify-between gap-2">
+							<span class="flex items-center gap-1.5"
+								><span class="h-2.5 w-2.5 shrink-0 rounded-[3px]" style:background={k.color}
+								></span>{k.label}</span
+							>
+							<b class="font-extrabold"><Money cents={latest.planned[k.key]} /></b>
+						</li>
+					{/each}
+					<li class="flex items-center justify-between gap-2 text-muted">
+						<span class="flex items-center gap-1.5"
+							><span class="h-2.5 w-2.5 shrink-0 rounded-[3px] bg-tonal"></span>Unallocated</span
+						>
+						<b class="font-extrabold {latest.unallocated < 0 ? 'text-danger' : ''}"
+							><Money cents={latest.unallocated} /></b
+						>
+					</li>
+				</ul>
+			</div>
+		</section>
+	{:else}
+		<section class="card-raised">
+			<h2 class="mb-1 text-sm font-extrabold">Latest paycheck</h2>
+			<p class="text-sm text-muted">
+				No paychecks yet. <a class="link" href="/paychecks/new">Plan one</a> to see where it goes.
+			</p>
+		</section>
+	{/if}
+</div>
 
 <section class="card mb-4">
 	<div class="mb-3 flex items-center justify-between">
-		<h2 class="font-medium">Income vs spending, last 12 months</h2>
-		<button class="text-sm link" onclick={() => (showTable = !showTable)}>
+		<h2 class="text-sm font-extrabold">Income vs spending, last 12 months</h2>
+		<button class="link text-xs" onclick={() => (showTable = !showTable)}>
 			{showTable ? 'Show chart' : 'Show table'}
 		</button>
 	</div>
@@ -54,8 +113,8 @@
 </section>
 
 <section class="card">
-	<form method="GET" class="mb-3 flex flex-wrap items-end gap-2">
-		<h2 class="mr-auto font-medium">Spending by category</h2>
+	<form method="GET" class="mb-3 flex flex-wrap items-center gap-2">
+		<h2 class="mr-auto text-sm font-extrabold">Spending by category</h2>
 		<input
 			class="input w-auto"
 			type="month"
@@ -95,10 +154,10 @@
 							<span class="text-xs text-muted">{Math.round((c.spent / total) * 100)}%</span></span
 						>
 					</div>
-					<div class="mt-1 h-2 rounded-r bg-tonal">
+					<div class="mt-1 h-2 overflow-hidden rounded-full bg-tonal">
 						<div
-							class="h-2 rounded-r"
-							style="width: {(c.spent / maxSpent) * 100}%; background: #2a78d6"
+							class="h-2 rounded-full bg-accent"
+							style:width="{(c.spent / maxSpent) * 100}%"
 						></div>
 					</div>
 				</a>
@@ -110,7 +169,7 @@
 </section>
 
 <section class="card mt-4" aria-labelledby="paycheck-breakdown">
-	<h2 id="paycheck-breakdown" class="mb-1 font-medium">Where each paycheck went</h2>
+	<h2 id="paycheck-breakdown" class="mb-1 text-sm font-extrabold">Where each paycheck went</h2>
 	<p class="mb-3 text-xs text-muted">
 		Planned amounts per paycheck; the ✓ line underneath is what has been ticked off so far.
 	</p>
@@ -120,11 +179,11 @@
 		<div class="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted" aria-hidden="true">
 			{#each KINDS as k (k.key)}
 				<span class="flex items-center gap-1.5"
-					><span class="h-2.5 w-2.5 rounded-sm" style="background:{k.color}"></span>{k.label}</span
+					><span class="h-2.5 w-2.5 rounded-[3px]" style:background={k.color}></span>{k.label}</span
 				>
 			{/each}
 			<span class="flex items-center gap-1.5"
-				><span class="h-2.5 w-2.5 rounded-sm bg-tonal"></span>Unallocated</span
+				><span class="h-2.5 w-2.5 rounded-[3px] bg-tonal"></span>Unallocated</span
 			>
 		</div>
 		<div class="overflow-x-auto">
@@ -192,7 +251,7 @@
 						<tr>
 							<td colspan={KINDS.length + 3} class="pt-1 pb-2">
 								<div
-									class="flex h-2 overflow-hidden rounded bg-tonal"
+									class="flex h-2 overflow-hidden rounded-full bg-tonal"
 									style="gap: 2px"
 									role="img"
 									aria-label="{dateLabel(p.date)}: {KINDS.map(
@@ -203,7 +262,8 @@
 										{#if p.planned[k.key] > 0}
 											<div
 												class="h-2 shrink-0"
-												style="width: {(p.planned[k.key] / scale) * 100}%; background: {k.color}"
+												style:width="{(p.planned[k.key] / scale) * 100}%"
+												style:background={k.color}
 											></div>
 										{/if}
 									{/each}
