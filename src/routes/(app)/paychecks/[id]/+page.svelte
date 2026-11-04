@@ -17,8 +17,8 @@
 	};
 </script>
 
-<a href="/" class="text-sm text-teal-700 hover:underline">← Paychecks</a>
-<h1 class="mt-1 mb-4 text-xl font-semibold">Paycheck plan</h1>
+<a href="/" class="text-sm link">← Paychecks</a>
+<h1 class="mt-1 mb-4 display">Paycheck plan</h1>
 
 {#if form?.error}<p class="error mb-4" role="alert">{form.error}</p>{/if}
 
@@ -61,7 +61,7 @@
 				<input class="input" id="pc-note" name="note" value={p.note ?? ''} />
 			</div>
 			<div class="col-span-2 flex items-center justify-end gap-3">
-				{#if saved}<span class="text-sm text-emerald-700" role="status">Saved</span>{/if}
+				{#if saved}<span class="text-sm font-bold text-good" role="status">Saved</span>{/if}
 				<button class="btn">Save</button>
 			</div>
 		</form>
@@ -84,12 +84,12 @@
 		/>
 		<UpcomingBills bills={p.billsDue} paycheckId={p.id} until={p.windowEnd} />
 
-		<section class="card">
+		<section class="card border-danger-tint">
 			<form method="POST" action="?/delete" use:enhance onsubmit={confirmDelete}>
 				<button class="btn-danger disabled:opacity-50" disabled={ticked}>Delete plan</button>
 			</form>
 			{#if ticked}
-				<p class="mt-2 text-xs text-slate-500">
+				<p class="mt-2 text-xs text-muted">
 					Untick everything on this plan (including "Paycheck received") to delete it.
 				</p>
 			{/if}

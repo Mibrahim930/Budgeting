@@ -11,15 +11,14 @@
 
 <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
 	<div>
-		<a href="/accounts" class="text-sm text-slate-500 hover:underline">← Accounts</a>
-		<h1 class="text-xl font-semibold">
+		<a href="/accounts" class="link text-sm">← Accounts</a>
+		<h1 class="display">
 			{data.account.name}
-			{#if data.account.archivedAt}<span class="text-sm font-normal text-slate-500">(closed)</span
-				>{/if}
+			{#if data.account.archivedAt}<span class="text-sm font-normal text-muted">(closed)</span>{/if}
 		</h1>
-		<p class="text-sm text-slate-600">
+		<p class="text-sm text-muted">
 			Balance <b><Money cents={data.account.balanceMinor} /></b>
-			<span class="ml-2 text-slate-500">Cleared <Money cents={data.account.clearedMinor} /></span>
+			<span class="ml-2 text-muted">Cleared <Money cents={data.account.clearedMinor} /></span>
 		</p>
 	</div>
 	<div class="flex gap-2">
@@ -37,13 +36,18 @@
 				<input class="input" id="acct-name" name="name" value={data.account.name} required />
 			</div>
 			<label class="flex items-center gap-2 pb-2 text-sm">
-				<input type="checkbox" name="onBudget" checked={data.account.onBudget} /> In budget
+				<input
+					type="checkbox"
+					class="h-5 w-5 accent-accent"
+					name="onBudget"
+					checked={data.account.onBudget}
+				/> In budget
 			</label>
 			<button class="btn">Save</button>
 		</form>
 		<form method="POST" action="?/archive" use:enhance>
 			<input type="hidden" name="archived" value={String(!data.account.archivedAt)} />
-			<button class="text-sm text-red-600 hover:underline">
+			<button class="text-sm text-danger hover:underline">
 				{data.account.archivedAt ? 'Reopen account' : 'Close account'}
 			</button>
 		</form>

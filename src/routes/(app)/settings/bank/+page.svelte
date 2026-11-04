@@ -12,12 +12,12 @@
 	};
 </script>
 
-<a href="/settings" class="text-sm text-slate-500 hover:underline">← Settings</a>
-<h1 class="mb-4 text-xl font-semibold">Bank sync</h1>
+<a href="/settings" class="link text-sm">← Settings</a>
+<h1 class="mb-4 display">Bank sync</h1>
 
 {#if form?.error}<p class="error mb-3">{form.error}</p>{/if}
 {#if form?.synced}
-	<p class="mb-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+	<p class="mb-3 rounded-control bg-good-tint px-3 py-2 text-sm text-good" role="status">
 		Synced: {form.synced.added} new transaction{form.synced.added === 1 ? '' : 's'}.
 		{#if form.synced.errors.length}<br />Bank messages: {form.synced.errors.join(' ')}{/if}
 	</p>
@@ -27,16 +27,16 @@
 	<section class="card mb-3">
 		<div class="flex flex-wrap items-start justify-between gap-2">
 			<div>
-				<p class="font-medium">{c.label}</p>
-				<p class="text-sm text-slate-500">
+				<p class="font-bold">{c.label}</p>
+				<p class="text-sm text-muted">
 					{c.accounts.length ? `Linked: ${c.accounts.join(', ')}` : 'No accounts linked yet'}
 				</p>
-				<p class="text-xs text-slate-500">
+				<p class="text-xs text-muted">
 					{c.lastSyncedAt
 						? `Last synced ${new Date(c.lastSyncedAt).toLocaleString()}`
 						: 'Never synced'}
 				</p>
-				{#if c.status === 'error'}<p class="mt-1 text-sm text-red-600">{c.error}</p>{/if}
+				{#if c.status === 'error'}<p class="mt-1 text-sm text-danger">{c.error}</p>{/if}
 			</div>
 			<div class="flex gap-2">
 				<form method="POST" action="?/sync" use:enhance={track}>
@@ -56,17 +56,17 @@
 			}}
 		>
 			<input type="hidden" name="id" value={c.id} />
-			<button class="text-sm text-red-600 hover:underline">Disconnect</button>
+			<button class="text-sm text-danger hover:underline">Disconnect</button>
 		</form>
 	</section>
 {/each}
 
 <section class="card">
-	<h2 class="mb-2 font-medium">Connect with SimpleFIN</h2>
-	<ol class="mb-3 list-decimal space-y-1 pl-5 text-sm text-slate-600">
+	<h2 class="mb-2 text-sm font-extrabold">Connect with SimpleFIN</h2>
+	<ol class="mb-3 list-decimal space-y-1 pl-5 text-sm text-muted">
 		<li>
 			Sign up at <a
-				class="text-teal-700 underline"
+				class="link"
 				href="https://bridge.simplefin.org"
 				target="_blank"
 				rel="noreferrer">SimpleFIN Bridge</a
@@ -76,7 +76,7 @@
 		<li>In SimpleFIN, create a new <b>setup token</b> and copy it.</li>
 		<li>Paste it below. It can only be used once.</li>
 	</ol>
-	<p class="mb-3 text-xs text-slate-500">
+	<p class="mb-3 text-xs text-muted">
 		Your bank password goes to SimpleFIN, never to this app. This app stores only SimpleFIN's
 		read-only access link, encrypted. Transactions sync automatically every few hours.
 	</p>

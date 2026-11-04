@@ -16,8 +16,8 @@
 </script>
 
 <div class="mx-auto max-w-2xl">
-	<h1 class="text-xl font-semibold">Welcome! Let's get you set up</h1>
-	<p class="mt-1 mb-4 text-sm text-slate-600">
+	<h1 class="display">Welcome! Let's get you set up</h1>
+	<p class="mt-1 mb-4 text-sm text-muted">
 		Tell us where you stand today: what's in your accounts, what you owe, and when you get paid.
 		We'll use it to plan each paycheck. Everything here can be changed later.
 	</p>
@@ -36,8 +36,8 @@
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 
 		<section class="card">
-			<h2 class="mb-1 font-medium">1. Checking</h2>
-			<p class="mb-3 text-sm text-slate-600">The account your paycheck lands in.</p>
+			<h2 class="mb-1 text-sm font-extrabold">1. Checking</h2>
+			<p class="mb-3 text-sm text-muted">The account your paycheck lands in.</p>
 			<div class="grid gap-3 sm:grid-cols-2">
 				<div>
 					<label class="label" for="w-checking-name">Checking account name</label>
@@ -63,8 +63,8 @@
 		</section>
 
 		<section class="card">
-			<h2 class="mb-1 font-medium">2. Savings</h2>
-			<p class="mb-3 text-sm text-slate-600">
+			<h2 class="mb-1 text-sm font-extrabold">2. Savings</h2>
+			<p class="mb-3 text-sm text-muted">
 				Savings or emergency accounts, with their balance today.
 			</p>
 			<input type="hidden" name="savings" value={JSON.stringify(savings)} />
@@ -94,14 +94,14 @@
 							</div>
 							<button
 								type="button"
-								class="px-2 py-2 text-slate-400 hover:text-red-600"
+								class="px-2 py-2 text-muted hover:text-danger"
 								aria-label="Remove savings account"
 								onclick={() => savings.splice(i, 1)}>✕</button
 							>
 						</div>
 					</div>
 				{:else}
-					<p class="text-sm text-slate-500">No savings account yet? You can add one later.</p>
+					<p class="text-sm text-muted">No savings account yet? You can add one later.</p>
 				{/each}
 			</div>
 			<button type="button" class="btn-secondary mt-3" onclick={addSavings}
@@ -110,8 +110,8 @@
 		</section>
 
 		<section class="card">
-			<h2 class="mb-1 font-medium">3. Debts</h2>
-			<p class="mb-3 text-sm text-slate-600">Credit cards and loans, with what you owe today.</p>
+			<h2 class="mb-1 text-sm font-extrabold">3. Debts</h2>
+			<p class="mb-3 text-sm text-muted">Credit cards and loans, with what you owe today.</p>
 			<input type="hidden" name="debts" value={JSON.stringify(debts)} />
 			<div class="space-y-3">
 				{#each debts as row, i (i)}
@@ -146,22 +146,22 @@
 							</div>
 							<button
 								type="button"
-								class="px-2 py-2 text-slate-400 hover:text-red-600"
+								class="px-2 py-2 text-muted hover:text-danger"
 								aria-label="Remove debt"
 								onclick={() => debts.splice(i, 1)}>✕</button
 							>
 						</div>
 					</div>
 				{:else}
-					<p class="text-sm text-slate-500">No debts? Great. Skip this step.</p>
+					<p class="text-sm text-muted">No debts? Great. Skip this step.</p>
 				{/each}
 			</div>
 			<button type="button" class="btn-secondary mt-3" onclick={addDebt}>+ Add debt</button>
 		</section>
 
 		<section class="card">
-			<h2 class="mb-1 font-medium">4. Income</h2>
-			<p class="mb-3 text-sm text-slate-600">
+			<h2 class="mb-1 text-sm font-extrabold">4. Income</h2>
+			<p class="mb-3 text-sm text-muted">
 				How often you're paid and roughly how much. You'll type the exact amount for each paycheck.
 			</p>
 			<div class="grid gap-3 sm:grid-cols-3">

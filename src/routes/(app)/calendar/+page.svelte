@@ -34,14 +34,14 @@
 	);
 
 	const DOT: Record<ChargeStatus, string> = {
-		unplanned: 'bg-slate-400',
-		planned: 'bg-blue-600',
-		paid: 'bg-emerald-600'
+		unplanned: 'bg-neutral',
+		planned: 'bg-accent',
+		paid: 'bg-good'
 	};
 	const PILL: Record<ChargeStatus, [string, string]> = {
-		unplanned: ['Not in a plan', 'bg-slate-100 text-slate-700'],
-		planned: ['Planned', 'bg-blue-100 text-blue-800'],
-		paid: ['Paid', 'bg-emerald-100 text-emerald-800']
+		unplanned: ['Not in a plan', 'bg-neutral-tint text-muted'],
+		planned: ['Planned', 'bg-accent-tint text-accent'],
+		paid: ['Paid', 'bg-good-tint text-good']
 	};
 
 	const href = (m: string, day?: string) => `/calendar?month=${m}${day ? `&day=${day}` : ''}`;
@@ -52,203 +52,207 @@
 	}
 </script>
 
-<div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+<div class="mb-4 flex flex-wrap items-end justify-between gap-2">
 	<div>
-		<h1 class="text-xl font-semibold">Calendar</h1>
-		<p class="text-sm text-slate-500">
+		<p class="eyebrow">
 			{#if cal.totals.count}
 				<Money cents={cal.totals.dueMinor} /> due this month ·
-				<Money cents={cal.totals.paidMinor} /> paid
+				<a href="/bills" class="link">All bills</a>
 			{:else}
-				No charges due this month.
+				No charges due this month · <a href="/bills" class="link">All bills</a>
 			{/if}
 		</p>
+		<h1 class="display">Calendar</h1>
 	</div>
-	<a href="/bills" class="text-sm text-teal-700 hover:underline">All bills</a>
+	{#if cal.totals.count}
+		<span
+			class="rounded-full border border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-good"
+			><Money cents={cal.totals.paidMinor} /> paid</span
+		>
+	{/if}
 </div>
 
 {#if data.addedTo}
-	<p class="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+	<p class="mb-4 rounded-card bg-good-tint px-4 py-3 text-sm font-semibold text-good" role="status">
 		Added to the {dayLabel(data.addedTo)} plan.
-		<a href="/paychecks/{data.addedId}" class="font-medium underline">Open plan</a>
+		<a href="/paychecks/{data.addedId}" class="font-extrabold underline">Open plan</a>
 	</p>
 {/if}
 
-<section class="card p-3 sm:p-4" aria-label="Month">
-	<div class="mb-3 flex items-center justify-between gap-2">
-		<a
-			href={href(addMonths(month, -1))}
-			class="btn-secondary px-2.5"
-			aria-label="Previous month"
-			data-sveltekit-noscroll>←</a
-		>
-		<div class="flex items-baseline gap-3">
-			<h2 class="font-semibold">{monthLabel(month)}</h2>
-			<a href="/calendar" class="text-sm text-teal-700 hover:underline" data-sveltekit-noscroll
-				>Today</a
+<div class="grid items-start gap-4 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+	<section class="card-raised p-4" aria-label="Month">
+		<div class="mb-3 flex items-center justify-between gap-2">
+			<a
+				href={href(addMonths(month, -1))}
+				class="btn-secondary btn-sm min-w-9"
+				aria-label="Previous month"
+				data-sveltekit-noscroll>←</a
+			>
+			<div class="flex items-baseline gap-3">
+				<h2 class="text-base font-extrabold">{monthLabel(month)}</h2>
+				<a href="/calendar" class="link text-xs" data-sveltekit-noscroll>Today</a>
+			</div>
+			<a
+				href={href(addMonths(month, 1))}
+				class="btn-secondary btn-sm min-w-9"
+				aria-label="Next month"
+				data-sveltekit-noscroll>→</a
 			>
 		</div>
-		<a
-			href={href(addMonths(month, 1))}
-			class="btn-secondary px-2.5"
-			aria-label="Next month"
-			data-sveltekit-noscroll>→</a
-		>
-	</div>
 
-	<div
-		class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-500"
-		aria-hidden="true"
-	>
-		{#each WEEKDAYS as w (w)}<div>{w}</div>{/each}
-	</div>
-	<div class="mt-1 grid grid-cols-7 gap-1">
-		{#each { length: blanks }, i (i)}<div></div>{/each}
-		{#each days as day (day)}
-			{@const items = chargesOn[day] ?? []}
-			{@const selected = day === data.day}
-			<button
-				type="button"
-				data-testid="day-{day}"
-				aria-label={dateLabel(day)}
-				aria-pressed={selected}
-				onclick={() => select(day)}
-				class="flex min-h-14 min-w-0 flex-col items-stretch rounded-md border p-1 text-left sm:min-h-20 sm:p-1.5 {selected
-					? 'border-teal-700 bg-teal-50 ring-1 ring-teal-700'
-					: 'border-slate-200 hover:bg-slate-50'}"
-			>
-				<span class="flex items-center justify-between gap-0.5">
-					<span
-						class="text-xs tabular-nums sm:text-sm {day === data.today
-							? 'rounded-full bg-teal-700 px-1 font-semibold text-white'
-							: 'text-slate-700'}">{dateParts(day).d}</span
-					>
-					{#if paydaySet.has(day)}
+		<div
+			class="grid grid-cols-7 gap-1.5 text-center text-[10px] font-extrabold text-muted"
+			aria-hidden="true"
+		>
+			{#each WEEKDAYS as w (w)}<div>{w.slice(0, 1)}</div>{/each}
+		</div>
+		<div class="mt-1.5 grid grid-cols-7 gap-1.5">
+			{#each { length: blanks }, i (i)}<div></div>{/each}
+			{#each days as day (day)}
+				{@const items = chargesOn[day] ?? []}
+				{@const selected = day === data.day}
+				{@const payday = paydaySet.has(day)}
+				<button
+					type="button"
+					data-testid="day-{day}"
+					aria-label={dateLabel(day)}
+					aria-pressed={selected}
+					onclick={() => select(day)}
+					class="flex min-h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-[14px] py-1 text-[13px] font-bold tabular-nums sm:min-h-16 {selected
+						? 'bg-accent text-white shadow-[0_6px_16px_rgba(79,70,229,0.3)]'
+						: payday
+							? 'bg-warning-tint text-warning-ink'
+							: 'bg-ground text-ink hover:bg-tonal'} {day === data.today && !selected
+						? 'ring-1 ring-accent'
+						: ''}"
+				>
+					<span>{dateParts(day).d}</span>
+					{#if payday}
 						<span
 							title="Payday"
 							data-payday
-							class="rounded bg-amber-100 px-1 text-[10px] leading-4 font-semibold text-amber-800"
-							>$</span
+							class="text-[8px] leading-none font-extrabold tracking-wider">PAY</span
 						>
 					{/if}
-				</span>
-				{#if items.length}
-					<span class="mt-auto flex flex-wrap items-center gap-0.5 pt-1">
-						{#each items.slice(0, 3) as c (c.billId)}
-							<span
-								class="h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2 {DOT[c.status]}"
-								data-status={c.status}
-								title={c.name}
-							></span>
-						{/each}
-						{#if items.length > 3}
-							<span class="text-[10px] leading-none text-slate-500">+{items.length - 3}</span>
-						{/if}
-					</span>
-				{/if}
-			</button>
-		{/each}
-	</div>
-
-	<ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600" aria-label="Legend">
-		<li class="flex items-center gap-1.5">
-			<span class="h-2 w-2 rounded-full bg-slate-400"></span> Not in a plan
-		</li>
-		<li class="flex items-center gap-1.5">
-			<span class="h-2 w-2 rounded-full bg-blue-600"></span> Planned
-		</li>
-		<li class="flex items-center gap-1.5">
-			<span class="h-2 w-2 rounded-full bg-emerald-600"></span> Paid
-		</li>
-		<li class="flex items-center gap-1.5">
-			<span class="rounded bg-amber-100 px-1 text-[10px] leading-4 font-semibold text-amber-800"
-				>$</span
-			> Payday
-		</li>
-	</ul>
-</section>
-
-<section class="mt-4" aria-label="Selected day">
-	<h2 class="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">
-		{dayLabel(data.day)}
-	</h2>
-	{#if selectedCharges.length || selectedPaychecks.length || predictedPayday}
-		<ul class="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
-			{#each selectedPaychecks as p (p.id)}
-				<li class="flex items-center gap-3 px-4 py-3">
-					<a href="/paychecks/{p.id}" class="min-w-0 grow hover:underline">
-						<span class="block font-medium">Payday</span>
-						<span class="block text-xs text-slate-500">Paycheck plan</span>
-					</a>
-					<span class="font-medium"><Money cents={p.amountMinor} /></span>
-					<StatusPill status={p.status} />
-				</li>
-			{/each}
-			{#if predictedPayday}
-				<li class="flex items-center gap-3 px-4 py-3">
-					<span class="min-w-0 grow">
-						<span class="block font-medium">Expected payday</span>
-						<span class="block text-xs text-slate-500">No plan yet</span>
-					</span>
-					<a href="/paychecks/new?date={data.day}" class="text-sm text-teal-700 hover:underline"
-						>Plan it</a
-					>
-				</li>
-			{/if}
-			{#each selectedCharges as c (c.billId)}
-				{@const pill = PILL[c.status]}
-				<li class="flex items-start gap-3 px-4 py-3">
-					<span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {DOT[c.status]}"></span>
-					<span class="min-w-0 grow">
-						<a href="/bills/{c.billId}" class="block truncate font-medium hover:underline"
-							>{c.name}</a
-						>
-						<span class="block text-xs text-slate-500">
-							Paid from {c.accountName}
-							{#if c.paycheckId}
-								· <a href="/paychecks/{c.paycheckId}" class="text-teal-700 hover:underline"
-									>View plan</a
+					{#if items.length}
+						<span class="flex items-center gap-0.5">
+							{#each items.slice(0, 3) as c (c.billId)}
+								<span
+									class="h-1.5 w-1.5 rounded-full {selected ? 'bg-white' : DOT[c.status]}"
+									data-status={c.status}
+									title={c.name}
+								></span>
+							{/each}
+							{#if items.length > 3}
+								<span
+									class="text-[9px] leading-none font-extrabold {selected
+										? 'text-white'
+										: 'text-muted'}">+{items.length - 3}</span
 								>
 							{/if}
 						</span>
-					</span>
-					<span class="flex shrink-0 flex-col items-end gap-1">
-						<span class="font-medium"><Money cents={c.amountMinor} /></span>
-						<span class="rounded-full px-2 py-0.5 text-xs font-medium {pill[1]}">{pill[0]}</span>
-					</span>
-				</li>
+					{/if}
+				</button>
 			{/each}
-		</ul>
-	{:else}
-		<p class="card text-sm text-slate-600">Nothing due</p>
-	{/if}
+		</div>
 
-	<div class="mt-4">
+		<ul
+			class="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold text-muted"
+			aria-label="Legend"
+		>
+			<li class="flex items-center gap-1.5">
+				<span class="h-2 w-2 rounded-full bg-neutral"></span> Not in a plan
+			</li>
+			<li class="flex items-center gap-1.5">
+				<span class="h-2 w-2 rounded-full bg-accent"></span> Planned
+			</li>
+			<li class="flex items-center gap-1.5">
+				<span class="h-2 w-2 rounded-full bg-good"></span> Paid
+			</li>
+			<li class="flex items-center gap-1.5">
+				<span class="h-2 w-2 rounded-[3px] bg-warning-tint ring-1 ring-warning/40"></span> Payday
+			</li>
+		</ul>
+	</section>
+
+	<section class="card" aria-label="Selected day">
+		<h2 class="mb-2 text-xs font-extrabold text-muted">
+			{dayLabel(data.day)}
+		</h2>
+		{#if selectedCharges.length || selectedPaychecks.length || predictedPayday}
+			<ul class="divide-y divide-hairline">
+				{#each selectedPaychecks as p (p.id)}
+					<li class="flex items-center gap-3 py-3">
+						<a href="/paychecks/{p.id}" class="min-w-0 grow hover:underline">
+							<span class="block font-extrabold">Payday</span>
+							<span class="block text-[11px] text-muted">Paycheck plan</span>
+						</a>
+						<span class="flex shrink-0 flex-col items-end gap-1">
+							<span class="font-extrabold"><Money cents={p.amountMinor} /></span>
+							<StatusPill status={p.status} />
+						</span>
+					</li>
+				{/each}
+				{#if predictedPayday}
+					<li class="flex items-center gap-3 py-3">
+						<span class="min-w-0 grow">
+							<span class="block font-extrabold">Expected payday</span>
+							<span class="block text-[11px] text-muted">No plan yet</span>
+						</span>
+						<a href="/paychecks/new?date={data.day}" class="link text-sm">Plan it</a>
+					</li>
+				{/if}
+				{#each selectedCharges as c (c.billId)}
+					{@const pill = PILL[c.status]}
+					<li class="flex items-center gap-3 py-3">
+						<span class="min-w-0 grow">
+							<a href="/bills/{c.billId}" class="block truncate font-extrabold hover:underline"
+								>{c.name}</a
+							>
+							<span class="block text-[11px] text-muted">
+								Paid from {c.accountName}
+								{#if c.paycheckId}
+									· <a href="/paychecks/{c.paycheckId}" class="link">View plan</a>
+								{/if}
+							</span>
+						</span>
+						<span class="flex shrink-0 flex-col items-end gap-1">
+							<span class="font-extrabold"><Money cents={c.amountMinor} /></span>
+							<span class="pill {pill[1]}">{pill[0]}</span>
+						</span>
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<p class="text-sm text-muted">Nothing due</p>
+		{/if}
+
 		<button
-			class="btn-secondary"
+			class="btn-secondary mt-3 w-full"
 			aria-expanded={showForm || !!form?.error}
 			onclick={() => (showForm = !showForm)}
 		>
 			Add a charge on this day
 		</button>
-	</div>
-	{#if showForm || form?.error}
-		<div class="mt-3">
-			{#key data.day}
-				<BillForm
-					accounts={data.accounts}
-					groups={data.groups}
-					action="?/create"
-					submitLabel="Add charge"
-					error={form?.error}
-					initial={{
-						startDate: data.day,
-						frequency: 'monthly',
-						dayOfMonth: dateParts(data.day).d
-					}}
-					onsaved={() => (showForm = false)}
-				/>
-			{/key}
-		</div>
-	{/if}
-</section>
+		{#if showForm || form?.error}
+			<div class="mt-3">
+				{#key data.day}
+					<BillForm
+						accounts={data.accounts}
+						groups={data.groups}
+						action="?/create"
+						submitLabel="Add charge"
+						error={form?.error}
+						initial={{
+							startDate: data.day,
+							frequency: 'monthly',
+							dayOfMonth: dateParts(data.day).d
+						}}
+						onsaved={() => (showForm = false)}
+						nested
+					/>
+				{/key}
+			</div>
+		{/if}
+	</section>
+</div>

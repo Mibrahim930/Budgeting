@@ -17,26 +17,26 @@
 	const uid = $props.id();
 </script>
 
-<section class="card" aria-labelledby="projected-{uid}">
-	<h2 id="projected-{uid}" class="font-medium">Projected balances</h2>
-	<p class="mb-2 text-xs text-slate-500">Once everything still planned is done.</p>
-	<table class="w-full text-sm">
+<section class="panel" aria-labelledby="projected-{uid}">
+	<h2 id="projected-{uid}" class="text-sm font-extrabold">After this plan</h2>
+	<p class="mb-2 text-[11px] text-muted">Once everything still planned is done.</p>
+	<table class="w-full text-[13px]">
 		<thead>
-			<tr class="text-left text-xs text-slate-500">
-				<th class="py-1 font-normal">Account</th>
-				<th class="py-1 text-right font-normal">Now</th>
-				<th class="py-1 text-right font-normal">After</th>
+			<tr class="text-left text-[11px] text-muted">
+				<th class="py-1 font-bold">Account</th>
+				<th class="py-1 text-right font-bold">Now</th>
+				<th class="py-1 text-right font-bold">After</th>
 			</tr>
 		</thead>
-		<tbody class="divide-y divide-slate-100">
+		<tbody>
 			{#each projected as a (a.accountId)}
 				<tr>
-					<th scope="row" class="py-2 pr-2 text-left font-medium break-words">{a.name}</th>
-					<td class="py-2 pl-2 text-right whitespace-nowrap text-slate-600">
+					<th scope="row" class="py-1.5 pr-2 text-left font-semibold break-words">{a.name}</th>
+					<td class="py-1.5 pl-2 text-right whitespace-nowrap text-muted">
 						<Money cents={a.before} />
 					</td>
 					<td
-						class="py-2 pl-2 text-right font-medium whitespace-nowrap"
+						class="py-1.5 pl-2 text-right font-extrabold whitespace-nowrap"
 						data-testid="projected-{a.accountId}"
 					>
 						<Money cents={a.after} colored />
@@ -46,10 +46,11 @@
 		</tbody>
 	</table>
 	{#if spendingMoneyMinor > 0}
-		<p class="mt-2 border-t border-slate-200 pt-2 text-sm">
-			Spending money until next payday: <b class="tabular-nums">{formatMoney(spendingMoneyMinor)}</b
+		<p class="mt-3 border-t border-accent-tint pt-3 text-[13px]">
+			Spending money until next payday: <b class="font-extrabold tabular-nums"
+				>{formatMoney(spendingMoneyMinor)}</b
 			>
-			<span class="block text-xs text-slate-500"
+			<span class="block text-[11px] text-muted"
 				>Stays in {depositAccountName} until you spend it.</span
 			>
 		</p>

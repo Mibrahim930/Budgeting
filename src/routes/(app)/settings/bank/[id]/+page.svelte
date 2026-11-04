@@ -5,9 +5,9 @@
 	let busy = $state(false);
 </script>
 
-<a href="/settings/bank" class="text-sm text-slate-500 hover:underline">← Bank sync</a>
-<h1 class="mb-1 text-xl font-semibold">Link bank accounts</h1>
-<p class="mb-4 text-sm text-slate-600">
+<a href="/settings/bank" class="link text-sm">← Bank sync</a>
+<h1 class="mb-1 display">Link bank accounts</h1>
+<p class="mb-4 text-sm text-muted">
 	Choose where each bank account's transactions should go. New accounts start with the bank's
 	balance and the last 90 days of transactions.
 </p>
@@ -15,7 +15,7 @@
 {#if data.loadError}<p class="error mb-3">{data.loadError}</p>{/if}
 {#if form?.error}<p class="error mb-3">{form.error}</p>{/if}
 {#if data.provider.errors.length}
-	<p class="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+	<p class="mb-3 rounded-control bg-warning-tint px-3 py-2 text-sm text-warning-ink">
 		SimpleFIN says: {data.provider.errors.join(' ')}
 	</p>
 {/if}
@@ -25,8 +25,8 @@
 		{#each data.provider.accounts as pa (pa.externalId)}
 			<div class="card grid gap-2 sm:grid-cols-2 sm:items-center">
 				<div>
-					<p class="font-medium">{pa.name}</p>
-					<p class="text-sm text-slate-500">{pa.orgName} · <Money cents={pa.balanceMinor} /></p>
+					<p class="font-bold">{pa.name}</p>
+					<p class="text-sm text-muted">{pa.orgName} · <Money cents={pa.balanceMinor} /></p>
 				</div>
 				<input type="hidden" name="externalId" value={pa.externalId} />
 				<input
@@ -52,7 +52,7 @@
 		<button class="btn" disabled={busy}>{busy ? 'Syncing…' : 'Save and sync'}</button>
 	</form>
 {:else if !data.loadError}
-	<p class="card text-sm text-slate-600">
+	<p class="card text-sm text-muted">
 		SimpleFIN has no accounts for this connection yet. Add your banks at bridge.simplefin.org.
 	</p>
 {/if}

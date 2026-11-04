@@ -15,16 +15,16 @@
 	};
 </script>
 
-<a href="/bills" class="text-sm text-slate-500 hover:underline">← Bills</a>
-<h1 class="text-xl font-semibold">{data.bill.name}</h1>
-<p class="mb-4 text-sm text-slate-600">
+<a href="/bills" class="link text-sm">← Bills</a>
+<h1 class="display">{data.bill.name}</h1>
+<p class="mb-4 text-sm text-muted">
 	{describeBill(data.bill)}{data.nextDue
 		? ` · Next due ${dayLabel(data.nextDue)}, ${data.nextDue.slice(0, 4)}`
 		: ''}
 </p>
 
 {#if data.ended}
-	<p class="mb-4 rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700" role="status">
+	<p class="mb-4 rounded-control bg-tonal px-3 py-2 text-sm text-ink" role="status">
 		This bill has ended{#if data.bill.endedAt}: its last due date was {dateLabel(
 				data.bill.endedAt
 			)}{/if}. It won't be suggested for new paychecks. Clear or move the last due date to start it
@@ -32,7 +32,7 @@
 	</p>
 {/if}
 {#if form && 'saved' in form}
-	<p class="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+	<p class="mb-4 rounded-control bg-good-tint px-3 py-2 text-sm text-good" role="status">
 		Bill saved. Paychecks you already planned keep the old amount.
 	</p>
 {/if}

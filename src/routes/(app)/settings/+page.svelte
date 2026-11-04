@@ -28,12 +28,12 @@
 	onMount(loadPasskeys);
 </script>
 
-<h1 class="mb-4 text-xl font-semibold">Settings</h1>
+<h1 class="mb-4 display">Settings</h1>
 
 <div class="space-y-4">
 	<section class="card">
-		<h2 class="mb-1 font-medium">Account</h2>
-		<p class="text-sm text-slate-600">{data.user.name} · {data.user.email}</p>
+		<h2 class="mb-1 text-sm font-extrabold">Account</h2>
+		<p class="text-sm text-muted">{data.user.name} · {data.user.email}</p>
 		<form
 			method="POST"
 			action="?/signOut"
@@ -45,51 +45,51 @@
 	</section>
 
 	<section class="card">
-		<h2 class="mb-1 font-medium">Pay schedule</h2>
-		<p class="mb-3 text-sm text-slate-600">
+		<h2 class="mb-1 text-sm font-extrabold">Pay schedule</h2>
+		<p class="mb-3 text-sm text-muted">
 			How often you're paid, your typical take-home pay and where it lands.
 		</p>
 		<a class="btn-secondary" href="/settings/pay">Edit pay schedule</a>
 	</section>
 
 	<section class="card">
-		<h2 class="mb-1 font-medium">Bank sync</h2>
-		<p class="mb-3 text-sm text-slate-600">
+		<h2 class="mb-1 text-sm font-extrabold">Bank sync</h2>
+		<p class="mb-3 text-sm text-muted">
 			Pull transactions from your bank automatically through SimpleFIN.
 		</p>
 		<a class="btn-secondary" href="/settings/bank">Manage bank sync</a>
 	</section>
 
 	<section class="card">
-		<h2 class="mb-1 font-medium">Categories</h2>
-		<p class="mb-3 text-sm text-slate-600">Add, rename or hide the categories for your spending.</p>
+		<h2 class="mb-1 text-sm font-extrabold">Categories</h2>
+		<p class="mb-3 text-sm text-muted">Add, rename or hide the categories for your spending.</p>
 		<a class="btn-secondary" href="/categories">Manage categories</a>
 	</section>
 
 	<section class="card">
-		<h2 class="mb-1 font-medium">Passkeys</h2>
-		<p class="mb-3 text-sm text-slate-600">
+		<h2 class="mb-1 text-sm font-extrabold">Passkeys</h2>
+		<p class="mb-3 text-sm text-muted">
 			Sign in with your fingerprint, face or device PIN instead of a password.
 		</p>
 		{#if passkeyError}<p class="error mb-2">{passkeyError}</p>{/if}
-		<ul class="mb-3 divide-y divide-slate-100 text-sm">
+		<ul class="mb-3 divide-y divide-hairline text-sm">
 			{#each passkeys as pk (pk.id)}
 				<li class="flex items-center justify-between py-2">
 					<span>{pk.name || 'Passkey'}</span>
-					<button class="text-red-600 hover:underline" onclick={() => removePasskey(pk.id)}
+					<button class="text-danger hover:underline" onclick={() => removePasskey(pk.id)}
 						>Remove</button
 					>
 				</li>
 			{:else}
-				<li class="py-2 text-slate-500">No passkeys yet.</li>
+				<li class="py-2 text-muted">No passkeys yet.</li>
 			{/each}
 		</ul>
 		<button class="btn-secondary" onclick={addPasskey}>Add a passkey</button>
 	</section>
 
-	<section class="card border-red-200">
-		<h2 class="mb-1 font-medium text-red-700">Delete my account</h2>
-		<p class="mb-3 text-sm text-slate-600">
+	<section class="card border-danger-tint">
+		<h2 class="mb-1 text-sm font-extrabold text-danger">Delete my account</h2>
+		<p class="mb-3 text-sm text-muted">
 			Permanently deletes your accounts, transactions, paycheck plans, bills, rules and bank
 			connections. This can't be undone.
 		</p>

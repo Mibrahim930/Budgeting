@@ -7,7 +7,7 @@
 </script>
 
 <div class="mb-4 flex items-center justify-between">
-	<h1 class="text-xl font-semibold">Invites</h1>
+	<h1 class="display">Invites</h1>
 	<form method="POST" action="?/create" use:enhance>
 		<button class="btn">New invite link</button>
 	</form>
@@ -27,7 +27,7 @@
 
 <div class="card overflow-x-auto p-0">
 	<table class="w-full text-sm">
-		<thead class="bg-slate-50 text-left text-slate-500">
+		<thead class="bg-ground text-left text-muted">
 			<tr
 				><th class="p-3">Code</th><th class="p-3">Status</th><th class="p-3">Expires</th><th
 				></th></tr
@@ -35,7 +35,7 @@
 		</thead>
 		<tbody>
 			{#each data.invites as inv (inv.code)}
-				<tr class="border-t border-slate-100">
+				<tr class="border-t border-hairline">
 					<td class="p-3 font-mono">{inv.code.slice(0, 8)}…</td>
 					<td class="p-3">
 						{#if inv.usedAt}Used by {inv.usedByEmail ?? 'deleted user'}
@@ -47,26 +47,26 @@
 						{#if !inv.usedAt}
 							<form method="POST" action="?/revoke" use:enhance>
 								<input type="hidden" name="code" value={inv.code} />
-								<button class="text-red-600 hover:underline">Revoke</button>
+								<button class="text-danger hover:underline">Revoke</button>
 							</form>
 						{/if}
 					</td>
 				</tr>
 			{:else}
-				<tr><td class="p-3 text-slate-500" colspan="4">No invites yet.</td></tr>
+				<tr><td class="p-3 text-muted" colspan="4">No invites yet.</td></tr>
 			{/each}
 		</tbody>
 	</table>
 </div>
 
 <div class="card mt-6">
-	<h2 class="mb-2 text-lg font-semibold">Backups</h2>
-	<p class="mb-3 text-sm text-slate-600">
+	<h2 class="mb-2 text-sm font-extrabold">Backups</h2>
+	<p class="mb-3 text-sm text-muted">
 		The backup file contains everyone's data, so keep it somewhere safe, such as a cloud drive or a
 		password-manager attachment.
 	</p>
 	<a class="btn" href="/admin/backup" download>Download a backup now</a>
-	<p class="mt-3 text-sm text-slate-500">
+	<p class="mt-3 text-sm text-muted">
 		To restore, stop the app and replace the database file with a backup; docs/go-live.md has the
 		steps.
 	</p>

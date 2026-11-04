@@ -9,7 +9,7 @@
 </script>
 
 <div class="mb-4 flex items-center justify-between">
-	<h1 class="text-xl font-semibold">Transactions</h1>
+	<h1 class="display">Transactions</h1>
 	<button class="btn" onclick={() => (adding = !adding)} disabled={!data.accountOptions.length}>
 		Add transaction
 	</button>
@@ -17,7 +17,7 @@
 
 {#if !data.accountOptions.length}
 	<p class="card mb-4 text-sm">
-		Create an <a class="text-teal-700 underline" href="/accounts">account</a> first.
+		Create an <a class="link" href="/accounts">account</a> first.
 	</p>
 {/if}
 
@@ -48,7 +48,13 @@
 	/>
 	<input class="input" type="month" name="month" value={f.month ?? ''} aria-label="Month" />
 	<label class="col-span-2 flex items-center gap-2 text-sm sm:col-span-4">
-		<input type="checkbox" name="uncategorized" value="1" checked={f.uncategorized} />
+		<input
+			type="checkbox"
+			class="h-5 w-5 accent-accent"
+			name="uncategorized"
+			value="1"
+			checked={f.uncategorized}
+		/>
 		Only uncategorized
 	</label>
 	<button class="btn-secondary">Filter</button>

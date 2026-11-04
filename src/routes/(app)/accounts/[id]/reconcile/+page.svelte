@@ -16,11 +16,9 @@
 	);
 </script>
 
-<a href="/accounts/{data.account.id}" class="text-sm text-slate-500 hover:underline"
-	>← {data.account.name}</a
->
-<h1 class="mb-1 text-xl font-semibold">Reconcile</h1>
-<p class="mb-4 text-sm text-slate-600">
+<a href="/accounts/{data.account.id}" class="link text-sm">← {data.account.name}</a>
+<h1 class="mb-1 display">Reconcile</h1>
+<p class="mb-4 text-sm text-muted">
 	Compare with your bank statement. Mark the transactions that appear on it as cleared until the
 	difference is zero, then lock them in.
 </p>
@@ -39,7 +37,7 @@
 				oninput={(e) => (typed = e.currentTarget.value)}
 			/>
 			{#if data.bank}
-				<p class="mt-1 text-xs text-slate-500">
+				<p class="mt-1 text-xs text-muted">
 					Bank reported <Money cents={data.bank.balanceMinor} /> on {new Date(
 						data.bank.asOf
 					).toLocaleDateString()}
@@ -52,11 +50,7 @@
 		</div>
 		<div>
 			<p class="label">Difference</p>
-			<p
-				class="py-2 font-semibold tabular-nums {difference === 0
-					? 'text-emerald-700'
-					: 'text-red-600'}"
-			>
+			<p class="py-2 font-semibold tabular-nums {difference === 0 ? 'text-good' : 'text-danger'}">
 				{#if difference === null}—{:else}<Money cents={difference} />{/if}
 			</p>
 		</div>
@@ -73,7 +67,5 @@
 	</div>
 </form>
 
-<h2 class="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">
-	Not yet reconciled
-</h2>
+<h2 class="mb-2 text-xs font-extrabold text-muted">Not yet reconciled</h2>
 <TransactionList items={data.unreconciled} showAccount={false} />
