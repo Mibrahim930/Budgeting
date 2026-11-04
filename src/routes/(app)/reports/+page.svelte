@@ -1,19 +1,43 @@
 <script lang="ts">
 	import Donut from '$lib/components/Donut.svelte';
+	import Ring from '$lib/components/Ring.svelte';
 	import IncomeSpendingChart from '$lib/components/IncomeSpendingChart.svelte';
 	import { KINDS } from '$lib/components/kinds';
 	import Money from '$lib/components/Money.svelte';
 	import { formatMoney } from '$lib/money';
-	import { monthLabel } from '$lib/month';
-	import { dateLabel } from '$lib/planner/describe';
+	import { dayDiff, monthLabel } from '$lib/month';
+	import { dateLabel, dayLabel } from '$lib/planner/describe';
 
 	let { data } = $props();
 	const total = $derived(data.spending.reduce((s, c) => s + c.spent, 0));
 	const maxSpent = $derived(Math.max(1, ...data.spending.map((c) => c.spent)));
 	let showTable = $state(false);
 
-	/** The donut shows the newest paycheck's plan by kind. */
-	const latest = $derived(data.paychecks[0] ?? null);
+	/** The donut shows the current plan (the one on the home page), else the newest paycheck. */
+	const latest = $derived(
+		(data.current && data.paychecks.find((p) => p.id === data.current!.id)) ??
+			data.paychecks[0] ??
+			null
+	);
+	/** Categorized spending lines of the current plan, with what has been spent so far. */
+	const spendingLines = $derived(
+		(data.current?.lines ?? []).flatMap((l) =>
+			l.kind === 'spending' && l.spentMinor !== null
+				? [
+						{
+							id: l.id,
+							label: l.label,
+							amount: l.amountMinor,
+							spent: l.spentMinor,
+							pct: l.amountMinor > 0 ? Math.round((l.spentMinor / l.amountMinor) * 100) : 100
+						}
+					]
+				: []
+		)
+	);
+	const daysLeft = $derived(
+		data.current ? Math.max(0, dayDiff(data.today, data.current.windowEnd)) : 0
+	);
 	const latestAllocated = $derived(
 		latest ? KINDS.reduce((s, k) => s + latest.planned[k.key], 0) : 0
 	);
@@ -27,7 +51,7 @@
 	{#if latest}
 		<section class="card-raised" aria-labelledby="latest-paycheck">
 			<h2 id="latest-paycheck" class="mb-3 text-sm font-extrabold">
-				Latest paycheck ·
+				{latest.id === data.current?.id ? 'This paycheck' : 'Latest paycheck'} ·
 				<a class="link" href="/paychecks/{latest.id}">{dateLabel(latest.date)}</a>
 			</h2>
 			<div class="flex items-center gap-4 sm:gap-5">
@@ -76,6 +100,34 @@
 			<p class="text-sm text-muted">
 				No paychecks yet. <a class="link" href="/paychecks/new">Plan one</a> to see where it goes.
 			</p>
+		</section>
+	{/if}
+	{#if data.current && spendingLines.length}
+		<section class="card" aria-labelledby="spending-money">
+			<h2 id="spending-money" class="mb-3 text-sm font-extrabold">
+				Spending money · {data.current.date > data.today
+					? `starts ${dayLabel(data.current.date)}`
+					: `${daysLeft} day${daysLeft === 1 ? '' : 's'} to go`}
+			</h2>
+			<ul class="grid grid-cols-2 gap-3">
+				{#each spendingLines as l (l.id)}
+					{@const over = l.spent > l.amount}
+					<li class="flex min-w-0 items-center gap-2.5">
+						<Ring
+							value={l.pct}
+							size={56}
+							color={over ? 'var(--color-danger)' : 'var(--color-accent)'}
+							label="{l.label} {l.pct}% used"
+						/>
+						<span class="min-w-0">
+							<span class="block truncate text-[13px] font-extrabold">{l.label}</span>
+							<span class="block text-[11px] {over ? 'font-bold text-danger' : 'text-muted'}"
+								>{formatMoney(l.spent)} of {formatMoney(l.amount)}</span
+							>
+						</span>
+					</li>
+				{/each}
+			</ul>
 		</section>
 	{/if}
 </div>
