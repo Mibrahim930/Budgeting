@@ -34,3 +34,18 @@ jobs:
             -e DISABLE_SYNC_SCHEDULER=1 budgeting
           for i in $(seq 1 30); do curl -fs http://localhost:3000/healthz && exit 0; sleep 1; done
           docker logs app; exit 1
+
+  # Railway deploys the repository's original branch and its branch setting cannot be
+  # changed, so after a green run on main move that branch to the same commit.
+  # Only green builds reach production.
+  deploy-branch:
+    needs: [check, docker]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git push origin HEAD:refs/heads/claude/vibrant-galileo-bo0ndu
