@@ -117,20 +117,19 @@
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 		<div class="col-span-2 sm:col-span-1">
 			<span class="label">Type</span>
-			<div class="flex rounded-md border border-slate-300 bg-white p-0.5 text-sm" role="group">
+			<div
+				class="flex rounded-control border border-hairline bg-surface p-0.5 text-sm"
+				role="group"
+			>
 				<button
 					type="button"
-					class="flex-1 rounded px-2 py-1.5 {s.direction === 'out'
-						? 'bg-slate-800 text-white'
-						: ''}"
+					class="flex-1 rounded px-2 py-1.5 {s.direction === 'out' ? 'bg-ink text-white' : ''}"
 					aria-pressed={s.direction === 'out'}
 					onclick={() => (s.direction = 'out')}>Outflow</button
 				>
 				<button
 					type="button"
-					class="flex-1 rounded px-2 py-1.5 {s.direction === 'in'
-						? 'bg-emerald-700 text-white'
-						: ''}"
+					class="flex-1 rounded px-2 py-1.5 {s.direction === 'in' ? 'bg-good text-white' : ''}"
 					aria-pressed={s.direction === 'in'}
 					onclick={() => (s.direction = 'in')}>Inflow</button
 				>
@@ -176,7 +175,7 @@
 	{/if}
 
 	{#if s.category === 'split'}
-		<div class="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+		<div class="space-y-2 rounded-control border border-hairline bg-ground p-3">
 			{#each s.splits as row, i (i)}
 				<div class="grid grid-cols-12 gap-2">
 					<input
@@ -197,7 +196,7 @@
 					/>
 					<button
 						type="button"
-						class="col-span-2 text-slate-400 hover:text-red-600 sm:col-span-1"
+						class="col-span-2 text-muted hover:text-danger sm:col-span-1"
 						aria-label="Remove split {i + 1}"
 						disabled={s.splits.length <= 2}
 						onclick={() => s.splits.splice(i, 1)}>✕</button
@@ -207,11 +206,11 @@
 			<div class="flex items-center justify-between text-sm">
 				<button
 					type="button"
-					class="text-teal-700 hover:underline"
+					class="link"
 					onclick={() => s.splits.push({ amount: '', categoryId: '', memo: '' })}
 					>+ Add split</button
 				>
-				<span class={remaining === 0 ? 'text-slate-500' : 'font-medium text-amber-700'}>
+				<span class={remaining === 0 ? 'text-muted' : 'font-medium text-warning'}>
 					{remaining === 0 ? 'Fully assigned' : `${formatMoney(remaining)} left to assign`}
 				</span>
 			</div>

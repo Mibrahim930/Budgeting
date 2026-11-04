@@ -38,8 +38,8 @@
 	const key = (b: { billId: string; dueDate: string }) => `${b.billId}|${b.dueDate}`;
 </script>
 
-<a href="/" class="text-sm text-teal-700 hover:underline">← Paychecks</a>
-<h1 class="mt-1 mb-4 text-xl font-semibold">New paycheck</h1>
+<a href="/" class="text-sm link">← Paychecks</a>
+<h1 class="mt-1 mb-4 display">New paycheck</h1>
 
 <form
 	method="POST"
@@ -110,7 +110,7 @@
 		{/if}
 		<div class={data.incomeCategories.length > 1 ? '' : 'sm:col-span-2'}>
 			<label class="label" for="pc-note"
-				>Note <span class="font-normal text-slate-500">(optional)</span></label
+				>Note <span class="font-normal text-muted">(optional)</span></label
 			>
 			<input class="input" id="pc-note" name="note" bind:value={note} />
 		</div>
@@ -127,19 +127,19 @@
 				disabled={refreshing}>Refresh bills</button
 			>
 		</div>
-		<p class="mb-2 text-xs text-slate-500">
+		<p class="mb-2 text-xs text-muted">
 			Due from {isDate(date) ? dayLabel(date) : '…'} until before {isDate(nextDate)
 				? dayLabel(nextDate)
 				: '…'}. Ticked bills are added to the plan.
 		</p>
-		<ul class="divide-y divide-slate-100 text-sm">
+		<ul class="divide-y divide-hairline text-sm">
 			{#each data.billsDue as b (key(b))}
 				{@const boxId = `pc-bill-${key(b)}`}
 				<li class="flex items-center gap-3 py-2">
 					<input
 						id={boxId}
 						type="checkbox"
-						class="h-5 w-5 accent-teal-700"
+						class="h-[22px] w-[22px] accent-accent"
 						name="bills"
 						value={key(b)}
 						checked={!b.plannedLineId}
@@ -147,7 +147,7 @@
 					/>
 					<label for={boxId} class="min-w-0 grow">
 						<span class="block font-medium">{b.name} · due {dayLabel(b.dueDate)}</span>
-						<span class="block truncate text-xs text-slate-500">
+						<span class="block truncate text-xs text-muted">
 							{b.plannedPaycheckId
 								? 'Already in another plan'
 								: `from ${b.accountName}`}{b.categoryName ? ` · ${b.categoryName}` : ''}
@@ -156,7 +156,7 @@
 					<span class="shrink-0"><Money cents={b.amountMinor} /></span>
 				</li>
 			{:else}
-				<li class="py-2 text-slate-500">No bills are due in this window.</li>
+				<li class="py-2 text-muted">No bills are due in this window.</li>
 			{/each}
 		</ul>
 	</section>

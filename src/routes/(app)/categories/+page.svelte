@@ -12,8 +12,8 @@
 	};
 </script>
 
-<a href="/bills" class="text-sm text-slate-500 hover:underline">← Bills</a>
-<h1 class="mb-4 text-xl font-semibold">Categories</h1>
+<a href="/bills" class="text-sm text-muted hover:underline">← Bills</a>
+<h1 class="mb-4 display">Categories</h1>
 {#if form?.error}<p class="error mb-3">{form.error}</p>{/if}
 
 <div class="space-y-4">
@@ -31,11 +31,11 @@
 					/>
 				</form>
 				{#if g.isIncome}
-					<span class="text-xs text-slate-500">Income</span>
+					<span class="text-xs text-muted">Income</span>
 				{:else}
 					<form method="POST" action="?/archiveGroup" use:enhance onsubmit={confirmArchive}>
 						<input type="hidden" name="id" value={g.id} />
-						<button class="text-sm text-red-600 hover:underline">Hide group</button>
+						<button class="text-sm text-danger hover:underline">Hide group</button>
 					</form>
 				{/if}
 			</div>
@@ -54,7 +54,7 @@
 						</form>
 						<form method="POST" action="?/archiveCategory" use:enhance onsubmit={confirmArchive}>
 							<input type="hidden" name="id" value={c.id} />
-							<button class="text-sm text-slate-500 hover:text-red-600" aria-label="Hide {c.name}"
+							<button class="text-sm text-muted hover:text-danger" aria-label="Hide {c.name}"
 								>Hide</button
 							>
 						</form>

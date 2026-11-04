@@ -21,9 +21,9 @@
 	let incomeCategoryId = $state(initial.incomeCategoryId);
 </script>
 
-<a href="/settings" class="text-sm text-slate-500 hover:underline">← Settings</a>
-<h1 class="mb-1 text-xl font-semibold">Pay schedule</h1>
-<p class="mb-4 text-sm text-slate-600">
+<a href="/settings" class="text-sm text-muted hover:underline">← Settings</a>
+<h1 class="mb-1 display">Pay schedule</h1>
+<p class="mb-4 text-sm text-muted">
 	Used to predict your next payday, pre-fill new paychecks and find the bills due before the next
 	one. You still type the exact amount and date for every paycheck.
 </p>
@@ -38,7 +38,7 @@
 		{#if form?.error}<p class="error sm:col-span-2" role="alert">{form.error}</p>{/if}
 		{#if form?.saved}
 			<p
-				class="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800 sm:col-span-2"
+				class="rounded-control bg-good-tint px-3 py-2 text-sm text-good sm:col-span-2"
 				role="status"
 			>
 				Pay schedule saved.

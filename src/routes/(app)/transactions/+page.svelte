@@ -9,7 +9,7 @@
 </script>
 
 <div class="mb-4 flex items-center justify-between">
-	<h1 class="text-xl font-semibold">Transactions</h1>
+	<h1 class="display">Transactions</h1>
 	<button class="btn" onclick={() => (adding = !adding)} disabled={!data.accountOptions.length}>
 		Add transaction
 	</button>
@@ -17,7 +17,7 @@
 
 {#if !data.accountOptions.length}
 	<p class="card mb-4 text-sm">
-		Create an <a class="text-teal-700 underline" href="/accounts">account</a> first.
+		Create an <a class="link" href="/accounts">account</a> first.
 	</p>
 {/if}
 

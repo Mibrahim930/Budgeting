@@ -22,25 +22,23 @@
 <section class="card" aria-labelledby="upcoming-{uid}">
 	<div class="mb-2 flex items-baseline justify-between gap-2">
 		<h2 id="upcoming-{uid}" class="font-medium">Bills before {dayLabel(until)}</h2>
-		<a class="text-sm text-teal-700 hover:underline" href="/bills">All bills</a>
+		<a class="text-sm link" href="/bills">All bills</a>
 	</div>
-	<ul class="divide-y divide-slate-100 text-sm" aria-label="Upcoming bills">
+	<ul class="divide-y divide-hairline text-sm" aria-label="Upcoming bills">
 		{#each bills as b (`${b.billId}|${b.dueDate}`)}
 			<li class="flex items-center gap-2 py-2">
 				<div class="min-w-0 grow">
 					<span class="block truncate font-medium">{b.name}</span>
-					<span class="block truncate text-xs text-slate-500">
+					<span class="block truncate text-xs text-muted">
 						due {dayLabel(b.dueDate)} · {b.accountName}
 					</span>
 				</div>
 				<span class="shrink-0"><Money cents={b.amountMinor} /></span>
 				<span class="w-20 shrink-0 text-right">
 					{#if b.plannedPaycheckId && b.plannedPaycheckId === paycheckId}
-						<span class="text-xs font-medium text-emerald-700">In plan ✓</span>
+						<span class="text-xs font-medium text-good">In plan ✓</span>
 					{:else if b.plannedPaycheckId}
-						<a class="text-xs text-teal-700 hover:underline" href="/paychecks/{b.plannedPaycheckId}"
-							>Other plan</a
-						>
+						<a class="text-xs link" href="/paychecks/{b.plannedPaycheckId}">Other plan</a>
 					{:else if paycheckId}
 						<form
 							method="POST"
@@ -61,7 +59,7 @@
 				</span>
 			</li>
 		{:else}
-			<li class="py-2 text-slate-500">No bills due.</li>
+			<li class="py-2 text-muted">No bills due.</li>
 		{/each}
 	</ul>
 </section>

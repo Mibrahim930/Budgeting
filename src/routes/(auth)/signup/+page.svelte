@@ -4,7 +4,7 @@
 	let { data, form } = $props();
 </script>
 
-<h1 class="mb-4 text-lg font-semibold">
+<h1 class="mb-4 display">
 	{data.isFirstUser ? 'Create the admin account' : 'Create your account'}
 </h1>
 
@@ -12,7 +12,7 @@
 	<p class="error" role="alert">
 		Sign-up is invite-only. This invite link is missing, already used or expired.
 	</p>
-	<p class="mt-4 text-sm"><a class="text-teal-700 underline" href="/login">Back to sign in</a></p>
+	<p class="mt-4 text-sm"><a class="link" href="/login">Back to sign in</a></p>
 {:else}
 	<form method="POST" class="card space-y-4" use:enhance>
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
@@ -47,7 +47,7 @@
 		</div>
 		<button class="btn w-full">Create account</button>
 	</form>
-	<p class="mt-4 text-center text-xs text-slate-500">
-		See <a class="underline" href="/privacy">what this app stores</a>.
+	<p class="mt-4 text-center text-xs text-muted">
+		See <a class="link" href="/privacy">what this app stores</a>.
 	</p>
 {/if}

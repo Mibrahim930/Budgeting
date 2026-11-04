@@ -178,9 +178,9 @@
 			value={initial?.startDate ?? today()}
 		/>
 		{#if frequency === 'every_n_weeks'}
-			<p class="mt-1 text-xs text-slate-500">Later due dates follow from this one.</p>
+			<p class="mt-1 text-xs text-muted">Later due dates follow from this one.</p>
 		{:else if frequency !== 'once'}
-			<p class="mt-1 text-xs text-slate-500">No due dates before this one.</p>
+			<p class="mt-1 text-xs text-muted">No due dates before this one.</p>
 		{/if}
 	</div>
 	{#if frequency !== 'once'}
@@ -212,9 +212,7 @@
 			<option value="">— none —</option>
 			{#each debtAccounts as a (a.id)}<option value={a.id}>{a.name}</option>{/each}
 		</select>
-		<p class="mt-1 text-xs text-slate-500">
-			Pick a card or loan if this bill is a payment toward it
-		</p>
+		<p class="mt-1 text-xs text-muted">Pick a card or loan if this bill is a payment toward it</p>
 	</div>
 
 	<div class="sm:col-span-2 sm:text-right">

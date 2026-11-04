@@ -5,7 +5,7 @@
 </script>
 
 <span
-	class="tabular-nums {colored && cents < 0 ? 'text-red-600' : ''} {colored && cents > 0
-		? 'text-emerald-700'
+	class="tabular-nums {colored && cents < 0 ? 'text-danger' : ''} {colored && cents > 0
+		? 'text-good'
 		: ''}">{formatMoney(cents)}</span
 >

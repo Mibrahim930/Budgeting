@@ -70,12 +70,10 @@
 
 	const submitForm = (e: Event) => (e.currentTarget as HTMLInputElement).form?.requestSubmit();
 
-	const chipClass = 'mt-1 inline-block rounded bg-slate-50 px-1.5 py-0.5 text-xs text-slate-500';
-	const linkClass = 'shrink-0 font-medium text-teal-700 hover:underline';
+	const chipClass = 'mt-1 inline-block rounded bg-ground px-1.5 py-0.5 text-xs text-muted';
+	const linkClass = 'shrink-0 font-medium link';
 
-	const statClass = $derived(
-		left < 0 ? 'text-red-600' : left > 0 ? 'text-amber-700' : 'text-emerald-700'
-	);
+	const statClass = $derived(left < 0 ? 'text-danger' : left > 0 ? 'text-warning' : 'text-good');
 </script>
 
 <section class="card" aria-labelledby="plan-heading-{uid}">
@@ -85,43 +83,43 @@
 		</h2>
 		<StatusPill status={paycheck.status} />
 	</div>
-	<p class="mt-0.5 text-xs text-slate-500">
+	<p class="mt-0.5 text-xs text-muted">
 		Covers bills due until {dayLabel(paycheck.windowEnd)}{paycheck.note
 			? ` · ${paycheck.note}`
 			: ''}
 	</p>
 
 	<dl class="mt-3 grid grid-cols-3 gap-2 text-center">
-		<div class="rounded-md bg-slate-50 px-2 py-2">
-			<dt class="text-xs text-slate-500">Pay</dt>
+		<div class="rounded-control bg-ground px-2 py-2">
+			<dt class="text-xs text-muted">Pay</dt>
 			<dd class="text-sm font-medium sm:text-base"><Money cents={paycheck.amountMinor} /></dd>
 		</div>
-		<div class="rounded-md bg-slate-50 px-2 py-2">
-			<dt class="text-xs text-slate-500">Allocated</dt>
+		<div class="rounded-control bg-ground px-2 py-2">
+			<dt class="text-xs text-muted">Allocated</dt>
 			<dd class="text-sm font-medium sm:text-base">
 				<Money cents={paycheck.totals.allocated} />
 			</dd>
 		</div>
 		<div
-			class="rounded-md px-2 py-2 {left < 0
-				? 'bg-red-50'
+			class="rounded-control px-2 py-2 {left < 0
+				? 'bg-danger-tint'
 				: left > 0
-					? 'bg-amber-50'
-					: 'bg-emerald-50'}"
+					? 'bg-warning-tint'
+					: 'bg-good-tint'}"
 		>
-			<dt class="text-xs text-slate-500">Left to allocate</dt>
+			<dt class="text-xs text-muted">Left to allocate</dt>
 			<dd class="text-sm font-semibold sm:text-base {statClass}" data-testid="left-to-allocate">
 				{formatMoney(left)}
 			</dd>
 		</div>
 	</dl>
 	{#if left < 0}
-		<p class="mt-2 text-sm font-medium text-red-600" role="status">
+		<p class="mt-2 text-sm font-medium text-danger" role="status">
 			Over-allocated by {formatMoney(-left)}
 		</p>
 	{/if}
 
-	<ul class="mt-3 divide-y divide-slate-100 border-y border-slate-100" aria-label="Plan checklist">
+	<ul class="mt-3 divide-y divide-hairline border-y border-hairline" aria-label="Plan checklist">
 		<li class="flex items-center gap-3 py-2.5">
 			<form
 				method="POST"
@@ -133,7 +131,7 @@
 				<input
 					id="income-{uid}"
 					type="checkbox"
-					class="h-5 w-5 accent-teal-700"
+					class="h-[22px] w-[22px] accent-accent"
 					aria-label="Paycheck received"
 					checked={paycheck.incomeConfirmed}
 					onchange={submitForm}
@@ -142,7 +140,7 @@
 			<div class="min-w-0 grow">
 				<label for="income-{uid}" class="block cursor-pointer">
 					<span class="block text-sm font-medium">Paycheck received</span>
-					<span class="block text-xs text-slate-500">
+					<span class="block text-xs text-muted">
 						into {paycheck.accountName} · {dayLabel(paycheck.date)}
 					</span>
 				</label>
@@ -186,7 +184,7 @@
 					<input
 						id={boxId}
 						type="checkbox"
-						class="h-5 w-5 accent-teal-700"
+						class="h-[22px] w-[22px] accent-accent"
 						aria-label={l.label}
 						checked={done}
 						onchange={submitForm}
@@ -194,23 +192,23 @@
 				</form>
 				<div class="min-w-0 grow">
 					<label for={boxId} class="block cursor-pointer">
-						<span class="block truncate text-sm font-medium {done ? 'text-slate-500' : ''}">
+						<span class="block truncate text-sm font-medium {done ? 'text-muted' : ''}">
 							{l.label}
 						</span>
 						{#if l.kind === 'spending' && l.spentMinor !== null}
 							{@const pct =
 								l.amountMinor > 0 ? Math.min(100, (l.spentMinor / l.amountMinor) * 100) : 100}
-							<span class="block text-xs text-slate-500">
+							<span class="block text-xs text-muted">
 								spent {formatMoney(l.spentMinor)} of {formatMoney(l.amountMinor)}
 							</span>
-							<span class="mt-1 block h-1 w-full max-w-40 overflow-hidden rounded bg-slate-100">
+							<span class="mt-1 block h-1 w-full max-w-40 overflow-hidden rounded bg-tonal">
 								<span
-									class="block h-full {l.spentMinor > l.amountMinor ? 'bg-red-500' : 'bg-teal-600'}"
+									class="block h-full {l.spentMinor > l.amountMinor ? 'bg-danger' : 'bg-accent'}"
 									style="width: {pct}%"
 								></span>
 							</span>
 						{:else}
-							<span class="block truncate text-xs text-slate-500">{subText(l)}</span>
+							<span class="block truncate text-xs text-muted">{subText(l)}</span>
 						{/if}
 					</label>
 					{#if match}
@@ -231,7 +229,7 @@
 				{#if done}
 					<span class="shrink-0 text-sm font-medium">
 						{#if l.txnId && l.txnOrigin === 'linked'}
-							<span class="mr-1 text-xs font-normal text-slate-400">linked</span>
+							<span class="mr-1 text-xs font-normal text-muted">linked</span>
 						{/if}
 						{#if l.txnId}
 							<a href="/transactions/{l.txnId}" class="hover:underline" title="View transaction">
@@ -257,7 +255,7 @@
 					<form method="POST" action="?/removeLine" use:enhance={keep} class="shrink-0">
 						<input type="hidden" name="id" value={l.id} />
 						<button
-							class="flex h-6 w-6 items-center justify-center rounded text-slate-400 hover:bg-slate-100 hover:text-red-600"
+							class="flex h-6 w-6 items-center justify-center rounded text-muted hover:bg-tonal hover:text-danger"
 							aria-label="Remove {l.label}"
 							title="Remove">✕</button
 						>
@@ -274,16 +272,14 @@
 				<button class="btn-secondary">Use {formatMoney(left)} as spending money</button>
 			</form>
 		{:else if left === 0}
-			<p class="text-sm font-medium text-emerald-700">Every dollar has a job</p>
+			<p class="text-sm font-medium text-good">Every dollar has a job</p>
 		{:else}
-			<p class="text-sm font-medium text-red-600">
+			<p class="text-sm font-medium text-danger">
 				This plan spends more than the paycheck. Lower a line or remove one.
 			</p>
 		{/if}
 		{#if home}
-			<a class="text-sm text-teal-700 hover:underline" href="/paychecks/{paycheck.id}"
-				>Open plan →</a
-			>
+			<a class="text-sm link" href="/paychecks/{paycheck.id}">Open plan →</a>
 		{/if}
 	</div>
 </section>

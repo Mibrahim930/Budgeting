@@ -1,25 +1,86 @@
 @import 'tailwindcss';
 
+@theme {
+	--font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+	--color-ground: #f6f5ff;
+	--color-surface: #ffffff;
+	--color-tonal: #eef2ff;
+	--color-ink: #1b1340;
+	--color-muted: #5b5a7a;
+	--color-hairline: #e4e2f3;
+	--color-accent: #4f46e5;
+	--color-accent-strong: #4338ca;
+	--color-accent-tint: #e0e7ff;
+	--color-good: #059669;
+	--color-good-tint: #d1fae5;
+	--color-warning: #d97706;
+	--color-warning-ink: #92400e;
+	--color-warning-tint: #fef3c7;
+	--color-danger: #e11d48;
+	--color-danger-tint: #ffe4e6;
+	--color-neutral: #a5a3bd;
+	--color-neutral-tint: #eeedf5;
+	--color-series-savings: #4f46e5;
+	--color-series-debt: #0284c7;
+	--color-series-bills: #e11d48;
+	--color-series-spending: #d97706;
+	--radius-card: 24px;
+	--radius-row: 18px;
+	--radius-control: 12px;
+	--shadow-soft: 0 10px 30px rgb(27 19 64 / 0.06);
+	--shadow-lift: 0 2px 8px rgb(27 19 64 / 0.08);
+}
+
+@layer base {
+	body {
+		@apply bg-ground text-ink antialiased;
+	}
+}
+
 @layer components {
 	.btn {
-		@apply inline-flex items-center justify-center rounded-md bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50;
+		@apply inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-accent px-4 py-2.5 text-sm font-bold text-white hover:bg-accent-strong disabled:opacity-50;
 	}
 	.btn-secondary {
-		@apply inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100;
+		@apply inline-flex min-h-11 items-center justify-center rounded-control bg-tonal px-4 py-2.5 text-sm font-bold text-accent hover:bg-accent-tint disabled:opacity-50;
 	}
 	.btn-danger {
-		@apply inline-flex items-center justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700;
+		@apply inline-flex min-h-11 items-center justify-center rounded-control bg-danger px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50;
+	}
+	.btn-sm {
+		@apply min-h-8 px-2.5 py-1 text-xs;
 	}
 	.input {
-		@apply block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-teal-600 focus:ring-1 focus:ring-teal-600 focus:outline-none;
+		@apply block min-h-11 w-full rounded-control border border-hairline bg-surface px-3 py-2.5 text-sm text-ink focus:border-accent focus:ring-2 focus:ring-accent/20 focus:outline-none;
 	}
 	.label {
-		@apply mb-1 block text-sm font-medium text-slate-700;
+		@apply mb-1 block text-xs font-bold text-muted;
 	}
 	.card {
-		@apply rounded-lg border border-slate-200 bg-white p-4 shadow-sm;
+		@apply rounded-card border border-hairline bg-surface p-4 sm:p-5;
+	}
+	.card-raised {
+		@apply rounded-card bg-surface p-4 shadow-soft sm:p-5;
+	}
+	.panel {
+		@apply rounded-card bg-tonal p-4;
+	}
+	.row {
+		@apply flex items-center gap-3 rounded-row border border-hairline bg-surface px-3.5 py-3;
+	}
+	.pill {
+		@apply inline-block shrink-0 rounded-full px-2 py-0.5 text-[10px] font-extrabold whitespace-nowrap;
+	}
+	.eyebrow {
+		@apply text-[13px] font-medium text-muted;
+	}
+	.display {
+		@apply text-[26px] leading-tight font-extrabold tracking-tight;
+	}
+	.link {
+		@apply font-semibold text-accent hover:text-accent-strong hover:underline;
 	}
 	.error {
-		@apply rounded-md bg-red-50 px-3 py-2 text-sm text-red-700;
+		@apply rounded-control bg-danger-tint px-3 py-2 text-sm font-medium text-danger;
 	}
 }

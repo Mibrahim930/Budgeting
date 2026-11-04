@@ -47,7 +47,7 @@
 </script>
 
 <div class="relative">
-	<div class="mb-2 flex gap-4 text-xs text-slate-600">
+	<div class="mb-2 flex gap-4 text-xs text-muted">
 		<span class="flex items-center gap-1.5"
 			><span class="h-2.5 w-2.5 rounded-sm" style="background:{COLORS.income}"></span>Income</span
 		>
@@ -66,12 +66,8 @@
 				stroke="#e2e8f0"
 				stroke-width="1"
 			/>
-			<text
-				x={PAD.left - 6}
-				y={y(t)}
-				dy="0.32em"
-				text-anchor="end"
-				class="fill-slate-500 text-[10px]">{compact(t)}</text
+			<text x={PAD.left - 6} y={y(t)} dy="0.32em" text-anchor="end" class="fill-muted text-[10px]"
+				>{compact(t)}</text
 			>
 		{/each}
 		{#each data as d, i (d.month)}
@@ -80,7 +76,7 @@
 				<path d={bar(x0 - barW - 1, d.income)} fill={COLORS.income} />
 				<path d={bar(x0 + 1, d.spending)} fill={COLORS.spending} />
 			</g>
-			<text x={x0} y={H - 6} text-anchor="middle" class="fill-slate-500 text-[10px]"
+			<text x={x0} y={H - 6} text-anchor="middle" class="fill-muted text-[10px]"
 				>{short(d.month)}</text
 			>
 			<rect
@@ -98,14 +94,14 @@
 	{#if hover !== null}
 		{@const d = data[hover]}
 		<div
-			class="pointer-events-none absolute top-6 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs shadow"
+			class="pointer-events-none absolute top-6 rounded-control border border-hairline bg-surface px-3 py-2 text-xs shadow"
 			style="left: clamp(0px, calc({((PAD.left + (hover + 0.5) * band) / W) *
 				100}% - 70px), calc(100% - 150px))"
 		>
 			<p class="mb-1 font-medium">{monthLabel(d.month)}</p>
-			<p class="text-slate-700">Income {formatMoney(d.income)}</p>
-			<p class="text-slate-700">Spending {formatMoney(d.spending)}</p>
-			<p class="text-slate-500">Net {formatMoney(d.income - d.spending)}</p>
+			<p class="text-ink">Income {formatMoney(d.income)}</p>
+			<p class="text-ink">Spending {formatMoney(d.spending)}</p>
+			<p class="text-muted">Net {formatMoney(d.income - d.spending)}</p>
 		</div>
 	{/if}
 </div>

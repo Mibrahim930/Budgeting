@@ -86,7 +86,7 @@
 	<h2 id={id('heading')} class="mb-3 font-medium">Add to plan</h2>
 
 	<div
-		class="mb-3 grid grid-cols-4 rounded-md border border-slate-300 p-0.5 text-sm"
+		class="mb-3 grid grid-cols-4 rounded-control border border-hairline p-0.5 text-sm"
 		role="group"
 		aria-label="Kind of line"
 	>
@@ -94,8 +94,8 @@
 			<button
 				type="button"
 				class="rounded px-2 py-1.5 font-medium {kind === k.kind
-					? 'bg-teal-700 text-white'
-					: 'text-slate-700 hover:bg-slate-100'}"
+					? 'bg-accent text-white'
+					: 'text-ink hover:bg-tonal'}"
 				aria-pressed={kind === k.kind}
 				onclick={() => choose(k.kind)}>{k.label}</button
 			>
@@ -126,8 +126,8 @@
 					{#each savingsAccounts as a (a.id)}<option value={a.id}>{a.name}</option>{/each}
 				</select>
 				{#if savingsAccounts.length === 0}
-					<p class="mt-1 text-xs text-slate-500">
-						<a class="text-teal-700 hover:underline" href="/accounts">Add a savings account</a> first.
+					<p class="mt-1 text-xs text-muted">
+						<a class="link" href="/accounts">Add a savings account</a> first.
 					</p>
 				{/if}
 			</div>
@@ -138,7 +138,7 @@
 					{#each debtAccounts as a (a.id)}<option value={a.id}>{a.name}</option>{/each}
 				</select>
 				{#if debtAccounts.length === 0}
-					<p class="mt-1 text-xs text-slate-500">No cards or loans yet.</p>
+					<p class="mt-1 text-xs text-muted">No cards or loans yet.</p>
 				{/if}
 			</div>
 		{:else if kind === 'bill'}
@@ -160,7 +160,7 @@
 					<input type="hidden" name="billId" value={bill.billId} />
 					<input type="hidden" name="dueDate" value={bill.dueDate} />
 				{:else}
-					<p class="mt-1 text-xs text-slate-500">
+					<p class="mt-1 text-xs text-muted">
 						Every bill due before the next payday is already in a plan.
 					</p>
 				{/if}

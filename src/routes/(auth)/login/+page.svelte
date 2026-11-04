@@ -26,7 +26,7 @@
 	}
 </script>
 
-<h1 class="mb-4 text-lg font-semibold">Sign in</h1>
+<h1 class="mb-4 display">Sign in</h1>
 <form class="card space-y-4" onsubmit={signIn}>
 	{#if error}<p class="error" role="alert">{error}</p>{/if}
 	<div>
@@ -56,6 +56,6 @@
 		Sign in with a passkey
 	</button>
 </form>
-<p class="mt-4 text-center text-sm text-slate-500">
+<p class="mt-4 text-center text-sm text-muted">
 	New here? Ask the person who runs this app for an invite link.
 </p>

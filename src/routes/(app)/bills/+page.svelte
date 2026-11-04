@@ -29,10 +29,10 @@
 
 <div class="mb-4 flex items-center justify-between gap-2">
 	<div>
-		<h1 class="text-xl font-semibold">Bills</h1>
-		<p class="text-sm text-slate-500">
+		<h1 class="display">Bills</h1>
+		<p class="text-sm text-muted">
 			Recurring bills and when they're due.
-			<a href="/calendar" class="text-teal-700 hover:underline">Calendar</a>
+			<a href="/calendar" class="link">Calendar</a>
 		</p>
 	</div>
 	<button class="btn shrink-0" aria-expanded={showForm} onclick={() => (showForm = !showForm)}>
@@ -57,11 +57,11 @@
 
 {#each sections as section (section.title)}
 	{#if section.items.length}
-		<h2 class="mt-6 mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">
+		<h2 class="mt-6 mb-2 text-xs font-extrabold text-muted">
 			{section.title}
 		</h2>
 		<ul
-			class="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white"
+			class="divide-y divide-hairline rounded-card border border-hairline bg-surface"
 			aria-label="{section.title} bills"
 		>
 			{#each section.items as b (b.id)}
@@ -71,8 +71,8 @@
 							<span class="truncate font-medium">{b.name}</span>
 							<span class="font-medium"><Money cents={b.amountMinor} /></span>
 						</span>
-						<span class="block text-sm text-slate-600">{describeBill(b)}</span>
-						<span class="block text-xs text-slate-500">
+						<span class="block text-sm text-muted">{describeBill(b)}</span>
+						<span class="block text-xs text-muted">
 							{[
 								`Paid from ${b.accountName}`,
 								b.categoryName,
@@ -81,7 +81,7 @@
 								.filter(Boolean)
 								.join(' · ')}
 						</span>
-						<span class="mt-0.5 block text-xs {b.ended ? 'text-slate-400' : 'text-teal-700'}">
+						<span class="mt-0.5 block text-xs {b.ended ? 'text-muted' : 'text-accent'}">
 							{b.nextDue ? `Next due ${dueLabel(b.nextDue)}` : 'Ended'}
 						</span>
 					</a>
@@ -89,14 +89,14 @@
 						{#if !b.ended}
 							<form method="POST" action="?/end" use:enhance>
 								<input type="hidden" name="id" value={b.id} />
-								<button class="text-slate-500 hover:underline" aria-label="End {b.name} today">
+								<button class="text-muted hover:underline" aria-label="End {b.name} today">
 									End
 								</button>
 							</form>
 						{/if}
 						<form method="POST" action="?/delete" use:enhance onsubmit={confirmDelete}>
 							<input type="hidden" name="id" value={b.id} />
-							<button class="text-red-600 hover:underline" aria-label="Delete {b.name}">
+							<button class="text-danger hover:underline" aria-label="Delete {b.name}">
 								Delete
 							</button>
 						</form>
@@ -108,12 +108,12 @@
 {/each}
 
 {#if data.bills.length === 0}
-	<p class="card mt-4 text-sm text-slate-600">
+	<p class="card mt-4 text-sm text-muted">
 		Add the bills you pay regularly: rent, phone, gym, subscriptions, card payments. When you plan a
 		paycheck, the bills due before your next payday are suggested automatically.
 	</p>
 {/if}
 
 <p class="mt-6 text-sm">
-	<a href="/categories" class="text-teal-700 hover:underline">Manage categories</a>
+	<a href="/categories" class="link">Manage categories</a>
 </p>

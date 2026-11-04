@@ -4,21 +4,21 @@
 	let { data, form } = $props();
 </script>
 
-<a href="/accounts/{data.txn.accountId}" class="text-sm text-slate-500 hover:underline">← Back</a>
-<h1 class="mb-4 text-xl font-semibold">Edit transaction</h1>
+<a href="/accounts/{data.txn.accountId}" class="text-sm text-muted hover:underline">← Back</a>
+<h1 class="mb-4 display">Edit transaction</h1>
 
 {#if data.description}
-	<p class="mb-3 text-sm text-slate-500">
+	<p class="mb-3 text-sm text-muted">
 		Bank description: <span class="font-mono">{data.description}</span> · from {data.source} ·
 		<a
-			class="text-teal-700 hover:underline"
+			class="link"
 			href="/rules?match={encodeURIComponent(data.description)}&category={data.txn.categoryId ??
 				''}">Make a rule</a
 		>
 	</p>
 {/if}
 {#if data.reconciled}
-	<p class="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+	<p class="mb-3 rounded-control bg-warning-tint px-3 py-2 text-sm text-warning-ink">
 		This transaction is reconciled. Changing its amount will make the account disagree with your
 		statement.
 	</p>

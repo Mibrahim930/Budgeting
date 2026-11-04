@@ -45,11 +45,11 @@
 	}
 </script>
 
-<h1 class="mb-4 text-xl font-semibold">Import from your bank</h1>
+<h1 class="mb-4 display">Import from your bank</h1>
 
 {#if !data.accounts.length}
 	<p class="card text-sm">
-		Create an <a class="text-teal-700 underline" href="/accounts">account</a> first.
+		Create an <a class="link" href="/accounts">account</a> first.
 	</p>
 {:else}
 	<form
@@ -71,12 +71,12 @@
 	>
 		{#if form?.error}<p class="error">{form.error}</p>{/if}
 		{#if form?.result}
-			<p class="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+			<p class="rounded-control bg-good-tint px-3 py-2 text-sm text-good" role="status">
 				Imported {form.result.added} new, linked {form.result.updated} existing, skipped
 				{form.result.skipped} already imported.
 			</p>
 		{/if}
-		<p class="text-sm text-slate-600">
+		<p class="text-sm text-muted">
 			Download a CSV, OFX or QFX file from your bank's website and choose it here. Transactions you
 			already have are skipped automatically.
 		</p>
@@ -109,7 +109,7 @@
 		<input type="hidden" name="mapping" value={JSON.stringify(mapping)} />
 
 		{#if mapping && !ofx}
-			<fieldset class="grid gap-3 rounded-md border border-slate-200 p-3 sm:grid-cols-3">
+			<fieldset class="grid gap-3 rounded-control border border-hairline p-3 sm:grid-cols-3">
 				<legend class="px-1 text-sm font-medium">Columns</legend>
 				<label class="flex items-center gap-2 text-sm sm:col-span-3">
 					<input type="checkbox" bind:checked={mapping.hasHeader} /> First row is a header
@@ -175,13 +175,13 @@
 				</p>
 			{/if}
 			<div class="overflow-x-auto">
-				<p class="mb-1 text-sm text-slate-600">
+				<p class="mb-1 text-sm text-muted">
 					{preview.rows.length} transactions found. Preview:
 				</p>
 				<table class="w-full text-sm">
 					<tbody>
 						{#each preview.rows.slice(0, 8) as r, i (i)}
-							<tr class="border-t border-slate-100">
+							<tr class="border-t border-hairline">
 								<td class="py-1 pr-3 whitespace-nowrap">{r.date}</td>
 								<td class="py-1 pr-3">{r.description}</td>
 								<td class="py-1 text-right"><Money cents={r.amountMinor} colored /></td>
@@ -201,25 +201,25 @@
 {/if}
 
 {#if data.batches.length}
-	<h2 class="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">Recent imports</h2>
-	<ul class="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white text-sm">
+	<h2 class="mb-2 text-xs font-extrabold text-muted">Recent imports</h2>
+	<ul class="divide-y divide-hairline rounded-card border border-hairline bg-surface text-sm">
 		{#each data.batches as b (b.id)}
 			<li class="flex items-center justify-between gap-2 px-3 py-2">
 				<span>
 					<span class="font-medium">{b.fileName ?? b.source}</span>
-					<span class="text-slate-500"
+					<span class="text-muted"
 						>→ {b.accountName} · {new Date(b.createdAt).toLocaleString()}</span
 					>
-					<span class="block text-xs text-slate-500">
+					<span class="block text-xs text-muted">
 						{b.added} added · {b.updated} linked · {b.skipped} skipped
 					</span>
 				</span>
 				{#if b.undoneAt}
-					<span class="text-xs text-slate-400">Undone</span>
+					<span class="text-xs text-muted">Undone</span>
 				{:else if b.added > 0}
 					<form method="POST" action="?/undo" use:enhance>
 						<input type="hidden" name="batchId" value={b.id} />
-						<button class="text-red-600 hover:underline">Undo</button>
+						<button class="text-danger hover:underline">Undo</button>
 					</form>
 				{/if}
 			</li>

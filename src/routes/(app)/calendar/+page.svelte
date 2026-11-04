@@ -34,14 +34,14 @@
 	);
 
 	const DOT: Record<ChargeStatus, string> = {
-		unplanned: 'bg-slate-400',
-		planned: 'bg-blue-600',
-		paid: 'bg-emerald-600'
+		unplanned: 'bg-neutral',
+		planned: 'bg-accent',
+		paid: 'bg-good'
 	};
 	const PILL: Record<ChargeStatus, [string, string]> = {
-		unplanned: ['Not in a plan', 'bg-slate-100 text-slate-700'],
-		planned: ['Planned', 'bg-blue-100 text-blue-800'],
-		paid: ['Paid', 'bg-emerald-100 text-emerald-800']
+		unplanned: ['Not in a plan', 'bg-tonal text-ink'],
+		planned: ['Planned', 'bg-accent-tint text-accent'],
+		paid: ['Paid', 'bg-good-tint text-good']
 	};
 
 	const href = (m: string, day?: string) => `/calendar?month=${m}${day ? `&day=${day}` : ''}`;
@@ -54,8 +54,8 @@
 
 <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
 	<div>
-		<h1 class="text-xl font-semibold">Calendar</h1>
-		<p class="text-sm text-slate-500">
+		<h1 class="display">Calendar</h1>
+		<p class="text-sm text-muted">
 			{#if cal.totals.count}
 				<Money cents={cal.totals.dueMinor} /> due this month ·
 				<Money cents={cal.totals.paidMinor} /> paid
@@ -64,11 +64,11 @@
 			{/if}
 		</p>
 	</div>
-	<a href="/bills" class="text-sm text-teal-700 hover:underline">All bills</a>
+	<a href="/bills" class="text-sm link">All bills</a>
 </div>
 
 {#if data.addedTo}
-	<p class="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+	<p class="mb-4 rounded-control bg-good-tint px-3 py-2 text-sm text-good" role="status">
 		Added to the {dayLabel(data.addedTo)} plan.
 		<a href="/paychecks/{data.addedId}" class="font-medium underline">Open plan</a>
 	</p>
@@ -84,9 +84,7 @@
 		>
 		<div class="flex items-baseline gap-3">
 			<h2 class="font-semibold">{monthLabel(month)}</h2>
-			<a href="/calendar" class="text-sm text-teal-700 hover:underline" data-sveltekit-noscroll
-				>Today</a
-			>
+			<a href="/calendar" class="text-sm link" data-sveltekit-noscroll>Today</a>
 		</div>
 		<a
 			href={href(addMonths(month, 1))}
@@ -96,10 +94,7 @@
 		>
 	</div>
 
-	<div
-		class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-500"
-		aria-hidden="true"
-	>
+	<div class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted" aria-hidden="true">
 		{#each WEEKDAYS as w (w)}<div>{w}</div>{/each}
 	</div>
 	<div class="mt-1 grid grid-cols-7 gap-1">
@@ -113,21 +108,21 @@
 				aria-label={dateLabel(day)}
 				aria-pressed={selected}
 				onclick={() => select(day)}
-				class="flex min-h-14 min-w-0 flex-col items-stretch rounded-md border p-1 text-left sm:min-h-20 sm:p-1.5 {selected
-					? 'border-teal-700 bg-teal-50 ring-1 ring-teal-700'
-					: 'border-slate-200 hover:bg-slate-50'}"
+				class="flex min-h-14 min-w-0 flex-col items-stretch rounded-control border p-1 text-left sm:min-h-20 sm:p-1.5 {selected
+					? 'border-accent bg-tonal ring-1 ring-accent'
+					: 'border-hairline hover:bg-ground'}"
 			>
 				<span class="flex items-center justify-between gap-0.5">
 					<span
 						class="text-xs tabular-nums sm:text-sm {day === data.today
-							? 'rounded-full bg-teal-700 px-1 font-semibold text-white'
-							: 'text-slate-700'}">{dateParts(day).d}</span
+							? 'rounded-full bg-accent px-1 font-semibold text-white'
+							: 'text-ink'}">{dateParts(day).d}</span
 					>
 					{#if paydaySet.has(day)}
 						<span
 							title="Payday"
 							data-payday
-							class="rounded bg-amber-100 px-1 text-[10px] leading-4 font-semibold text-amber-800"
+							class="rounded bg-warning-tint px-1 text-[10px] leading-4 font-semibold text-warning-ink"
 							>$</span
 						>
 					{/if}
@@ -142,7 +137,7 @@
 							></span>
 						{/each}
 						{#if items.length > 3}
-							<span class="text-[10px] leading-none text-slate-500">+{items.length - 3}</span>
+							<span class="text-[10px] leading-none text-muted">+{items.length - 3}</span>
 						{/if}
 					</span>
 				{/if}
@@ -150,18 +145,19 @@
 		{/each}
 	</div>
 
-	<ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600" aria-label="Legend">
+	<ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted" aria-label="Legend">
 		<li class="flex items-center gap-1.5">
-			<span class="h-2 w-2 rounded-full bg-slate-400"></span> Not in a plan
+			<span class="h-2 w-2 rounded-full bg-neutral"></span> Not in a plan
 		</li>
 		<li class="flex items-center gap-1.5">
-			<span class="h-2 w-2 rounded-full bg-blue-600"></span> Planned
+			<span class="h-2 w-2 rounded-full bg-accent"></span> Planned
 		</li>
 		<li class="flex items-center gap-1.5">
-			<span class="h-2 w-2 rounded-full bg-emerald-600"></span> Paid
+			<span class="h-2 w-2 rounded-full bg-good"></span> Paid
 		</li>
 		<li class="flex items-center gap-1.5">
-			<span class="rounded bg-amber-100 px-1 text-[10px] leading-4 font-semibold text-amber-800"
+			<span
+				class="rounded bg-warning-tint px-1 text-[10px] leading-4 font-semibold text-warning-ink"
 				>$</span
 			> Payday
 		</li>
@@ -169,16 +165,16 @@
 </section>
 
 <section class="mt-4" aria-label="Selected day">
-	<h2 class="mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">
+	<h2 class="mb-2 text-xs font-extrabold text-muted">
 		{dayLabel(data.day)}
 	</h2>
 	{#if selectedCharges.length || selectedPaychecks.length || predictedPayday}
-		<ul class="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+		<ul class="divide-y divide-hairline rounded-card border border-hairline bg-surface">
 			{#each selectedPaychecks as p (p.id)}
 				<li class="flex items-center gap-3 px-4 py-3">
 					<a href="/paychecks/{p.id}" class="min-w-0 grow hover:underline">
 						<span class="block font-medium">Payday</span>
-						<span class="block text-xs text-slate-500">Paycheck plan</span>
+						<span class="block text-xs text-muted">Paycheck plan</span>
 					</a>
 					<span class="font-medium"><Money cents={p.amountMinor} /></span>
 					<StatusPill status={p.status} />
@@ -188,11 +184,9 @@
 				<li class="flex items-center gap-3 px-4 py-3">
 					<span class="min-w-0 grow">
 						<span class="block font-medium">Expected payday</span>
-						<span class="block text-xs text-slate-500">No plan yet</span>
+						<span class="block text-xs text-muted">No plan yet</span>
 					</span>
-					<a href="/paychecks/new?date={data.day}" class="text-sm text-teal-700 hover:underline"
-						>Plan it</a
-					>
+					<a href="/paychecks/new?date={data.day}" class="text-sm link">Plan it</a>
 				</li>
 			{/if}
 			{#each selectedCharges as c (c.billId)}
@@ -203,12 +197,10 @@
 						<a href="/bills/{c.billId}" class="block truncate font-medium hover:underline"
 							>{c.name}</a
 						>
-						<span class="block text-xs text-slate-500">
+						<span class="block text-xs text-muted">
 							Paid from {c.accountName}
 							{#if c.paycheckId}
-								· <a href="/paychecks/{c.paycheckId}" class="text-teal-700 hover:underline"
-									>View plan</a
-								>
+								· <a href="/paychecks/{c.paycheckId}" class="link">View plan</a>
 							{/if}
 						</span>
 					</span>
@@ -220,7 +212,7 @@
 			{/each}
 		</ul>
 	{:else}
-		<p class="card text-sm text-slate-600">Nothing due</p>
+		<p class="card text-sm text-muted">Nothing due</p>
 	{/if}
 
 	<div class="mt-4">

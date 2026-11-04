@@ -20,8 +20,8 @@
 
 <div class="mb-4 flex items-center justify-between">
 	<div>
-		<h1 class="text-xl font-semibold">Accounts</h1>
-		<p class="text-sm text-slate-500">Net worth <Money cents={netWorth} /></p>
+		<h1 class="display">Accounts</h1>
+		<p class="text-sm text-muted">Net worth <Money cents={netWorth} /></p>
 	</div>
 	<button class="btn" onclick={() => (showForm = !showForm)}>Add account</button>
 </div>
@@ -63,20 +63,20 @@
 
 {#each sections as section (section.title)}
 	{#if section.items.length}
-		<h2 class="mt-6 mb-2 text-sm font-semibold tracking-wide text-slate-500 uppercase">
+		<h2 class="mt-6 mb-2 text-xs font-extrabold text-muted">
 			{section.title}
 		</h2>
-		<ul class="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+		<ul class="divide-y divide-hairline rounded-card border border-hairline bg-surface">
 			{#each section.items as a (a.id)}
 				<li>
 					<a
 						href="/accounts/{a.id}"
-						class="flex items-center justify-between px-4 py-3 hover:bg-slate-50"
+						class="flex items-center justify-between px-4 py-3 hover:bg-ground"
 					>
 						<span>
 							<span class="font-medium">{a.name}</span>
-							<span class="ml-2 text-xs text-slate-500 capitalize">{a.type}</span>
-							{#if a.connectionId}<span class="ml-1 text-xs text-teal-700">· synced</span>{/if}
+							<span class="ml-2 text-xs text-muted capitalize">{a.type}</span>
+							{#if a.connectionId}<span class="ml-1 text-xs text-accent">· synced</span>{/if}
 						</span>
 						<Money cents={a.balanceMinor} colored />
 					</a>
@@ -87,7 +87,7 @@
 {/each}
 
 {#if data.accounts.length === 0}
-	<p class="card mt-4 text-sm text-slate-600">
+	<p class="card mt-4 text-sm text-muted">
 		Add the bank accounts and credit cards you spend from. You can connect them to your bank later
 		in Settings → Bank sync, or import CSV files from your bank.
 	</p>

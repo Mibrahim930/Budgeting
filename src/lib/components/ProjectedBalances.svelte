@@ -19,20 +19,20 @@
 
 <section class="card" aria-labelledby="projected-{uid}">
 	<h2 id="projected-{uid}" class="font-medium">Projected balances</h2>
-	<p class="mb-2 text-xs text-slate-500">Once everything still planned is done.</p>
+	<p class="mb-2 text-xs text-muted">Once everything still planned is done.</p>
 	<table class="w-full text-sm">
 		<thead>
-			<tr class="text-left text-xs text-slate-500">
+			<tr class="text-left text-xs text-muted">
 				<th class="py-1 font-normal">Account</th>
 				<th class="py-1 text-right font-normal">Now</th>
 				<th class="py-1 text-right font-normal">After</th>
 			</tr>
 		</thead>
-		<tbody class="divide-y divide-slate-100">
+		<tbody class="divide-y divide-hairline">
 			{#each projected as a (a.accountId)}
 				<tr>
 					<th scope="row" class="py-2 pr-2 text-left font-medium break-words">{a.name}</th>
-					<td class="py-2 pl-2 text-right whitespace-nowrap text-slate-600">
+					<td class="py-2 pl-2 text-right whitespace-nowrap text-muted">
 						<Money cents={a.before} />
 					</td>
 					<td
@@ -46,11 +46,10 @@
 		</tbody>
 	</table>
 	{#if spendingMoneyMinor > 0}
-		<p class="mt-2 border-t border-slate-200 pt-2 text-sm">
+		<p class="mt-2 border-t border-hairline pt-2 text-sm">
 			Spending money until next payday: <b class="tabular-nums">{formatMoney(spendingMoneyMinor)}</b
 			>
-			<span class="block text-xs text-slate-500"
-				>Stays in {depositAccountName} until you spend it.</span
+			<span class="block text-xs text-muted">Stays in {depositAccountName} until you spend it.</span
 			>
 		</p>
 	{/if}

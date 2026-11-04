@@ -19,18 +19,18 @@
 	] as const;
 </script>
 
-<h1 class="mb-4 text-xl font-semibold">Reports</h1>
+<h1 class="mb-4 display">Reports</h1>
 
 <section class="card mb-4">
 	<div class="mb-3 flex items-center justify-between">
 		<h2 class="font-medium">Income vs spending, last 12 months</h2>
-		<button class="text-sm text-teal-700 hover:underline" onclick={() => (showTable = !showTable)}>
+		<button class="text-sm link" onclick={() => (showTable = !showTable)}>
 			{showTable ? 'Show chart' : 'Show table'}
 		</button>
 	</div>
 	{#if showTable}
 		<table class="w-full text-sm">
-			<thead class="text-left text-slate-500">
+			<thead class="text-left text-muted">
 				<tr
 					><th class="py-1">Month</th><th class="text-right">Income</th><th class="text-right"
 						>Spending</th
@@ -39,7 +39,7 @@
 			</thead>
 			<tbody>
 				{#each data.trend as r (r.month)}
-					<tr class="border-t border-slate-100">
+					<tr class="border-t border-hairline">
 						<td class="py-1">{monthLabel(r.month)}</td>
 						<td class="text-right"><Money cents={r.income} /></td>
 						<td class="text-right"><Money cents={r.spending} /></td>
@@ -71,7 +71,7 @@
 		</select>
 		<button class="btn-secondary">Show</button>
 	</form>
-	<p class="mb-3 text-sm text-slate-600">
+	<p class="mb-3 text-sm text-muted">
 		{data.span === 1
 			? monthLabel(data.month)
 			: `${monthLabel(data.from)} – ${monthLabel(data.month)}`}:
@@ -88,15 +88,14 @@
 				>
 					<div class="flex justify-between text-sm">
 						<span class="group-hover:underline"
-							>{c.name} <span class="text-xs text-slate-400">{c.groupName}</span></span
+							>{c.name} <span class="text-xs text-muted">{c.groupName}</span></span
 						>
-						<span class="tabular-nums text-slate-700"
+						<span class="tabular-nums text-ink"
 							><Money cents={c.spent} />
-							<span class="text-xs text-slate-400">{Math.round((c.spent / total) * 100)}%</span
-							></span
+							<span class="text-xs text-muted">{Math.round((c.spent / total) * 100)}%</span></span
 						>
 					</div>
-					<div class="mt-1 h-2 rounded-r bg-slate-100">
+					<div class="mt-1 h-2 rounded-r bg-tonal">
 						<div
 							class="h-2 rounded-r"
 							style="width: {(c.spent / maxSpent) * 100}%; background: #2a78d6"
@@ -105,32 +104,32 @@
 				</a>
 			</li>
 		{:else}
-			<li class="text-sm text-slate-500">No spending in this period.</li>
+			<li class="text-sm text-muted">No spending in this period.</li>
 		{/each}
 	</ul>
 </section>
 
 <section class="card mt-4" aria-labelledby="paycheck-breakdown">
 	<h2 id="paycheck-breakdown" class="mb-1 font-medium">Where each paycheck went</h2>
-	<p class="mb-3 text-xs text-slate-500">
+	<p class="mb-3 text-xs text-muted">
 		Planned amounts per paycheck; the ✓ line underneath is what has been ticked off so far.
 	</p>
 	{#if data.paychecks.length === 0}
-		<p class="text-sm text-slate-500">No paychecks yet.</p>
+		<p class="text-sm text-muted">No paychecks yet.</p>
 	{:else}
-		<div class="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600" aria-hidden="true">
+		<div class="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted" aria-hidden="true">
 			{#each KINDS as k (k.key)}
 				<span class="flex items-center gap-1.5"
 					><span class="h-2.5 w-2.5 rounded-sm" style="background:{k.color}"></span>{k.label}</span
 				>
 			{/each}
 			<span class="flex items-center gap-1.5"
-				><span class="h-2.5 w-2.5 rounded-sm bg-slate-200"></span>Unallocated</span
+				><span class="h-2.5 w-2.5 rounded-sm bg-tonal"></span>Unallocated</span
 			>
 		</div>
 		<div class="overflow-x-auto">
 			<table class="w-full text-sm" aria-labelledby="paycheck-breakdown">
-				<thead class="text-right text-xs text-slate-500">
+				<thead class="text-right text-xs text-muted">
 					<tr>
 						<th class="hidden py-1 text-left font-normal sm:table-cell">Paycheck</th>
 						<th class="hidden pl-2 font-normal sm:table-cell">Pay</th>
@@ -145,7 +144,7 @@
 						p.amountMinor,
 						KINDS.reduce((s, k) => s + p.planned[k.key], 0)
 					)}
-					<tbody class="border-t border-slate-100">
+					<tbody class="border-t border-hairline">
 						<!-- Phones: date, pay and unallocated get their own line so the money columns fit. -->
 						<tr class="sm:hidden">
 							<td colspan={KINDS.length} class="pt-2">
@@ -155,9 +154,7 @@
 									>
 									<span class="text-right">
 										<Money cents={p.amountMinor} />
-										<span
-											class="block text-xs {p.unallocated < 0 ? 'text-red-600' : 'text-slate-500'}"
-										>
+										<span class="block text-xs {p.unallocated < 0 ? 'text-danger' : 'text-muted'}">
 											{formatMoney(p.unallocated)} unallocated
 										</span>
 									</span>
@@ -175,18 +172,18 @@
 								<td class="pt-1 pl-2 text-right whitespace-nowrap sm:pt-2">
 									{#if p.planned[k.key] || p.actual[k.key]}
 										<Money cents={p.planned[k.key]} />
-										<span class="block text-xs text-slate-400 tabular-nums"
+										<span class="block text-xs text-muted tabular-nums"
 											><span class="sr-only">done: </span>✓ {formatMoney(p.actual[k.key])}</span
 										>
 									{:else}
-										<span class="text-slate-300">—</span>
+										<span class="text-neutral">—</span>
 									{/if}
 								</td>
 							{/each}
 							<td
 								class="hidden pt-2 pl-2 text-right whitespace-nowrap sm:table-cell {p.unallocated <
 								0
-									? 'text-red-600'
+									? 'text-danger'
 									: ''}"
 							>
 								<Money cents={p.unallocated} />
@@ -195,7 +192,7 @@
 						<tr>
 							<td colspan={KINDS.length + 3} class="pt-1 pb-2">
 								<div
-									class="flex h-2 overflow-hidden rounded bg-slate-200"
+									class="flex h-2 overflow-hidden rounded bg-tonal"
 									style="gap: 2px"
 									role="img"
 									aria-label="{dateLabel(p.date)}: {KINDS.map(
