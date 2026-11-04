@@ -15,7 +15,7 @@
 	};
 </script>
 
-<a href="/bills" class="text-sm text-muted hover:underline">← Bills</a>
+<a href="/bills" class="link text-sm">← Bills</a>
 <h1 class="display">{data.bill.name}</h1>
 <p class="mb-4 text-sm text-muted">
 	{describeBill(data.bill)}{data.nextDue

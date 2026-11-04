@@ -66,7 +66,8 @@
 		</div>
 	</div>
 	<label class="flex items-center gap-2 text-sm">
-		<input type="checkbox" name="applyNow" checked /> Also apply to uncategorized transactions now
+		<input type="checkbox" class="h-5 w-5 accent-accent" name="applyNow" checked /> Also apply to uncategorized
+		transactions now
 	</label>
 	<button class="btn">Add rule</button>
 </form>
@@ -77,7 +78,9 @@
 		<button class="btn-secondary">Apply to uncategorized</button>
 	</form>
 </div>
-<ul class="divide-y divide-hairline rounded-card border border-hairline bg-surface text-sm">
+<ul
+	class="divide-y divide-hairline overflow-hidden rounded-card border border-hairline bg-surface text-sm"
+>
 	{#each data.rules as r (r.id)}
 		<li class="flex items-center justify-between gap-2 px-3 py-2">
 			<span>

@@ -12,7 +12,7 @@
 	};
 </script>
 
-<a href="/settings" class="text-sm text-muted hover:underline">← Settings</a>
+<a href="/settings" class="link text-sm">← Settings</a>
 <h1 class="mb-4 display">Bank sync</h1>
 
 {#if form?.error}<p class="error mb-3">{form.error}</p>{/if}
@@ -27,7 +27,7 @@
 	<section class="card mb-3">
 		<div class="flex flex-wrap items-start justify-between gap-2">
 			<div>
-				<p class="font-medium">{c.label}</p>
+				<p class="font-bold">{c.label}</p>
 				<p class="text-sm text-muted">
 					{c.accounts.length ? `Linked: ${c.accounts.join(', ')}` : 'No accounts linked yet'}
 				</p>
@@ -62,7 +62,7 @@
 {/each}
 
 <section class="card">
-	<h2 class="mb-2 font-medium">Connect with SimpleFIN</h2>
+	<h2 class="mb-2 text-sm font-extrabold">Connect with SimpleFIN</h2>
 	<ol class="mb-3 list-decimal space-y-1 pl-5 text-sm text-muted">
 		<li>
 			Sign up at <a

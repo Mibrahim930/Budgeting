@@ -36,7 +36,7 @@
 		{#if form?.error}<p class="error" role="alert">{form.error}</p>{/if}
 
 		<section class="card">
-			<h2 class="mb-1 font-medium">1. Checking</h2>
+			<h2 class="mb-1 text-sm font-extrabold">1. Checking</h2>
 			<p class="mb-3 text-sm text-muted">The account your paycheck lands in.</p>
 			<div class="grid gap-3 sm:grid-cols-2">
 				<div>
@@ -63,7 +63,7 @@
 		</section>
 
 		<section class="card">
-			<h2 class="mb-1 font-medium">2. Savings</h2>
+			<h2 class="mb-1 text-sm font-extrabold">2. Savings</h2>
 			<p class="mb-3 text-sm text-muted">
 				Savings or emergency accounts, with their balance today.
 			</p>
@@ -110,7 +110,7 @@
 		</section>
 
 		<section class="card">
-			<h2 class="mb-1 font-medium">3. Debts</h2>
+			<h2 class="mb-1 text-sm font-extrabold">3. Debts</h2>
 			<p class="mb-3 text-sm text-muted">Credit cards and loans, with what you owe today.</p>
 			<input type="hidden" name="debts" value={JSON.stringify(debts)} />
 			<div class="space-y-3">
@@ -160,7 +160,7 @@
 		</section>
 
 		<section class="card">
-			<h2 class="mb-1 font-medium">4. Income</h2>
+			<h2 class="mb-1 text-sm font-extrabold">4. Income</h2>
 			<p class="mb-3 text-sm text-muted">
 				How often you're paid and roughly how much. You'll type the exact amount for each paycheck.
 			</p>

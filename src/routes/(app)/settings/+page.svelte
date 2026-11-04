@@ -32,7 +32,7 @@
 
 <div class="space-y-4">
 	<section class="card">
-		<h2 class="mb-1 font-medium">Account</h2>
+		<h2 class="mb-1 text-sm font-extrabold">Account</h2>
 		<p class="text-sm text-muted">{data.user.name} · {data.user.email}</p>
 		<form
 			method="POST"
@@ -45,7 +45,7 @@
 	</section>
 
 	<section class="card">
-		<h2 class="mb-1 font-medium">Pay schedule</h2>
+		<h2 class="mb-1 text-sm font-extrabold">Pay schedule</h2>
 		<p class="mb-3 text-sm text-muted">
 			How often you're paid, your typical take-home pay and where it lands.
 		</p>
@@ -53,7 +53,7 @@
 	</section>
 
 	<section class="card">
-		<h2 class="mb-1 font-medium">Bank sync</h2>
+		<h2 class="mb-1 text-sm font-extrabold">Bank sync</h2>
 		<p class="mb-3 text-sm text-muted">
 			Pull transactions from your bank automatically through SimpleFIN.
 		</p>
@@ -61,13 +61,13 @@
 	</section>
 
 	<section class="card">
-		<h2 class="mb-1 font-medium">Categories</h2>
+		<h2 class="mb-1 text-sm font-extrabold">Categories</h2>
 		<p class="mb-3 text-sm text-muted">Add, rename or hide the categories for your spending.</p>
 		<a class="btn-secondary" href="/categories">Manage categories</a>
 	</section>
 
 	<section class="card">
-		<h2 class="mb-1 font-medium">Passkeys</h2>
+		<h2 class="mb-1 text-sm font-extrabold">Passkeys</h2>
 		<p class="mb-3 text-sm text-muted">
 			Sign in with your fingerprint, face or device PIN instead of a password.
 		</p>
@@ -88,7 +88,7 @@
 	</section>
 
 	<section class="card border-danger-tint">
-		<h2 class="mb-1 font-medium text-danger">Delete my account</h2>
+		<h2 class="mb-1 text-sm font-extrabold text-danger">Delete my account</h2>
 		<p class="mb-3 text-sm text-muted">
 			Permanently deletes your accounts, transactions, paycheck plans, bills, rules and bank
 			connections. This can't be undone.

@@ -4,7 +4,7 @@
 	let { data, form } = $props();
 </script>
 
-<a href="/accounts/{data.txn.accountId}" class="text-sm text-muted hover:underline">← Back</a>
+<a href="/accounts/{data.txn.accountId}" class="link text-sm">← Back</a>
 <h1 class="mb-4 display">Edit transaction</h1>
 
 {#if data.description}

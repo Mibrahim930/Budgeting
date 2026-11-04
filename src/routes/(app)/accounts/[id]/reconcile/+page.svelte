@@ -16,9 +16,7 @@
 	);
 </script>
 
-<a href="/accounts/{data.account.id}" class="text-sm text-muted hover:underline"
-	>← {data.account.name}</a
->
+<a href="/accounts/{data.account.id}" class="link text-sm">← {data.account.name}</a>
 <h1 class="mb-1 display">Reconcile</h1>
 <p class="mb-4 text-sm text-muted">
 	Compare with your bank statement. Mark the transactions that appear on it as cleared until the

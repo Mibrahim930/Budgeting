@@ -60,7 +60,7 @@
 </div>
 
 <div class="card mt-6">
-	<h2 class="mb-2 text-lg font-semibold">Backups</h2>
+	<h2 class="mb-2 text-sm font-extrabold">Backups</h2>
 	<p class="mb-3 text-sm text-muted">
 		The backup file contains everyone's data, so keep it somewhere safe, such as a cloud drive or a
 		password-manager attachment.

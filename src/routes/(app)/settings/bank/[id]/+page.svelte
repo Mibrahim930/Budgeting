@@ -5,7 +5,7 @@
 	let busy = $state(false);
 </script>
 
-<a href="/settings/bank" class="text-sm text-muted hover:underline">← Bank sync</a>
+<a href="/settings/bank" class="link text-sm">← Bank sync</a>
 <h1 class="mb-1 display">Link bank accounts</h1>
 <p class="mb-4 text-sm text-muted">
 	Choose where each bank account's transactions should go. New accounts start with the bank's
@@ -25,7 +25,7 @@
 		{#each data.provider.accounts as pa (pa.externalId)}
 			<div class="card grid gap-2 sm:grid-cols-2 sm:items-center">
 				<div>
-					<p class="font-medium">{pa.name}</p>
+					<p class="font-bold">{pa.name}</p>
 					<p class="text-sm text-muted">{pa.orgName} · <Money cents={pa.balanceMinor} /></p>
 				</div>
 				<input type="hidden" name="externalId" value={pa.externalId} />

@@ -11,7 +11,7 @@
 
 <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
 	<div>
-		<a href="/accounts" class="text-sm text-muted hover:underline">← Accounts</a>
+		<a href="/accounts" class="link text-sm">← Accounts</a>
 		<h1 class="display">
 			{data.account.name}
 			{#if data.account.archivedAt}<span class="text-sm font-normal text-muted">(closed)</span>{/if}
@@ -36,7 +36,12 @@
 				<input class="input" id="acct-name" name="name" value={data.account.name} required />
 			</div>
 			<label class="flex items-center gap-2 pb-2 text-sm">
-				<input type="checkbox" name="onBudget" checked={data.account.onBudget} /> In budget
+				<input
+					type="checkbox"
+					class="h-5 w-5 accent-accent"
+					name="onBudget"
+					checked={data.account.onBudget}
+				/> In budget
 			</label>
 			<button class="btn">Save</button>
 		</form>

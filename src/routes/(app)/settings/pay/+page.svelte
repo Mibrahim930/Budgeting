@@ -21,7 +21,7 @@
 	let incomeCategoryId = $state(initial.incomeCategoryId);
 </script>
 
-<a href="/settings" class="text-sm text-muted hover:underline">← Settings</a>
+<a href="/settings" class="link text-sm">← Settings</a>
 <h1 class="mb-1 display">Pay schedule</h1>
 <p class="mb-4 text-sm text-muted">
 	Used to predict your next payday, pre-fill new paychecks and find the bills due before the next

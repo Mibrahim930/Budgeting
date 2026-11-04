@@ -61,15 +61,15 @@
 			{section.title}
 		</h2>
 		<ul
-			class="divide-y divide-hairline rounded-card border border-hairline bg-surface"
+			class="divide-y divide-hairline overflow-hidden rounded-card border border-hairline bg-surface"
 			aria-label="{section.title} bills"
 		>
 			{#each section.items as b (b.id)}
 				<li class="flex items-start gap-3 px-4 py-3">
 					<a href="/bills/{b.id}" class="min-w-0 grow hover:underline-offset-2">
 						<span class="flex items-baseline justify-between gap-2">
-							<span class="truncate font-medium">{b.name}</span>
-							<span class="font-medium"><Money cents={b.amountMinor} /></span>
+							<span class="truncate font-bold">{b.name}</span>
+							<span class="font-bold"><Money cents={b.amountMinor} /></span>
 						</span>
 						<span class="block text-sm text-muted">{describeBill(b)}</span>
 						<span class="block text-xs text-muted">

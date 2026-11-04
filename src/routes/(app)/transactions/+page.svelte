@@ -48,7 +48,13 @@
 	/>
 	<input class="input" type="month" name="month" value={f.month ?? ''} aria-label="Month" />
 	<label class="col-span-2 flex items-center gap-2 text-sm sm:col-span-4">
-		<input type="checkbox" name="uncategorized" value="1" checked={f.uncategorized} />
+		<input
+			type="checkbox"
+			class="h-5 w-5 accent-accent"
+			name="uncategorized"
+			value="1"
+			checked={f.uncategorized}
+		/>
 		Only uncategorized
 	</label>
 	<button class="btn-secondary">Filter</button>

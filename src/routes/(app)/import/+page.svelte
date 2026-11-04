@@ -110,9 +110,10 @@
 
 		{#if mapping && !ofx}
 			<fieldset class="grid gap-3 rounded-control border border-hairline p-3 sm:grid-cols-3">
-				<legend class="px-1 text-sm font-medium">Columns</legend>
+				<legend class="px-1 text-xs font-extrabold text-muted">Columns</legend>
 				<label class="flex items-center gap-2 text-sm sm:col-span-3">
-					<input type="checkbox" bind:checked={mapping.hasHeader} /> First row is a header
+					<input type="checkbox" class="h-5 w-5 accent-accent" bind:checked={mapping.hasHeader} /> First
+					row is a header
 				</label>
 				<div>
 					<label class="label" for="m-date">Date</label>
@@ -161,7 +162,11 @@
 					</div>
 				{/if}
 				<label class="flex items-center gap-2 text-sm sm:col-span-3">
-					<input type="checkbox" bind:checked={mapping.invertAmount} />
+					<input
+						type="checkbox"
+						class="h-5 w-5 accent-accent"
+						bind:checked={mapping.invertAmount}
+					/>
 					Purchases show as positive numbers (flip signs)
 				</label>
 			</fieldset>
@@ -202,11 +207,13 @@
 
 {#if data.batches.length}
 	<h2 class="mb-2 text-xs font-extrabold text-muted">Recent imports</h2>
-	<ul class="divide-y divide-hairline rounded-card border border-hairline bg-surface text-sm">
+	<ul
+		class="divide-y divide-hairline overflow-hidden rounded-card border border-hairline bg-surface text-sm"
+	>
 		{#each data.batches as b (b.id)}
 			<li class="flex items-center justify-between gap-2 px-3 py-2">
 				<span>
-					<span class="font-medium">{b.fileName ?? b.source}</span>
+					<span class="font-bold">{b.fileName ?? b.source}</span>
 					<span class="text-muted"
 						>→ {b.accountName} · {new Date(b.createdAt).toLocaleString()}</span
 					>
