@@ -83,19 +83,19 @@
 </script>
 
 <section class="card" aria-labelledby={id('heading')}>
-	<h2 id={id('heading')} class="mb-3 font-medium">Add to plan</h2>
+	<h2 id={id('heading')} class="mb-3 text-sm font-extrabold">Add to plan</h2>
 
 	<div
-		class="mb-3 grid grid-cols-4 rounded-control border border-hairline p-0.5 text-sm"
+		class="mb-4 grid grid-cols-4 gap-1 rounded-[14px] bg-ground p-1"
 		role="group"
 		aria-label="Kind of line"
 	>
 		{#each kinds as k (k.kind)}
 			<button
 				type="button"
-				class="rounded px-2 py-1.5 font-medium {kind === k.kind
-					? 'bg-accent text-white'
-					: 'text-ink hover:bg-tonal'}"
+				class="min-h-11 rounded-[11px] text-xs font-extrabold {kind === k.kind
+					? 'bg-surface text-accent shadow-lift'
+					: 'text-muted hover:text-ink'}"
 				aria-pressed={kind === k.kind}
 				onclick={() => choose(k.kind)}>{k.label}</button
 			>

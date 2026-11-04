@@ -61,7 +61,7 @@
 				<input class="input" id="pc-note" name="note" value={p.note ?? ''} />
 			</div>
 			<div class="col-span-2 flex items-center justify-end gap-3">
-				{#if saved}<span class="text-sm text-good" role="status">Saved</span>{/if}
+				{#if saved}<span class="text-sm font-bold text-good" role="status">Saved</span>{/if}
 				<button class="btn">Save</button>
 			</div>
 		</form>
@@ -84,7 +84,7 @@
 		/>
 		<UpcomingBills bills={p.billsDue} paycheckId={p.id} until={p.windowEnd} />
 
-		<section class="card">
+		<section class="card border-danger-tint">
 			<form method="POST" action="?/delete" use:enhance onsubmit={confirmDelete}>
 				<button class="btn-danger disabled:opacity-50" disabled={ticked}>Delete plan</button>
 			</form>

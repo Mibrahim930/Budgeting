@@ -21,24 +21,24 @@
 
 <section class="card" aria-labelledby="upcoming-{uid}">
 	<div class="mb-2 flex items-baseline justify-between gap-2">
-		<h2 id="upcoming-{uid}" class="font-medium">Bills before {dayLabel(until)}</h2>
-		<a class="text-sm link" href="/bills">All bills</a>
+		<h2 id="upcoming-{uid}" class="text-sm font-extrabold">Bills before {dayLabel(until)}</h2>
+		<a class="link text-xs" href="/bills">All bills</a>
 	</div>
 	<ul class="divide-y divide-hairline text-sm" aria-label="Upcoming bills">
 		{#each bills as b (`${b.billId}|${b.dueDate}`)}
-			<li class="flex items-center gap-2 py-2">
+			<li class="flex items-center gap-2 py-2.5">
 				<div class="min-w-0 grow">
-					<span class="block truncate font-medium">{b.name}</span>
-					<span class="block truncate text-xs text-muted">
+					<span class="block truncate font-bold">{b.name}</span>
+					<span class="block truncate text-[11px] text-muted">
 						due {dayLabel(b.dueDate)} · {b.accountName}
 					</span>
 				</div>
-				<span class="shrink-0"><Money cents={b.amountMinor} /></span>
+				<span class="shrink-0 font-bold"><Money cents={b.amountMinor} /></span>
 				<span class="w-20 shrink-0 text-right">
 					{#if b.plannedPaycheckId && b.plannedPaycheckId === paycheckId}
-						<span class="text-xs font-medium text-good">In plan ✓</span>
+						<span class="text-xs font-bold text-good">In plan ✓</span>
 					{:else if b.plannedPaycheckId}
-						<a class="text-xs link" href="/paychecks/{b.plannedPaycheckId}">Other plan</a>
+						<a class="link text-xs" href="/paychecks/{b.plannedPaycheckId}">Other plan</a>
 					{:else if paycheckId}
 						<form
 							method="POST"
@@ -51,9 +51,7 @@
 							<input type="hidden" name="kind" value="bill" />
 							<input type="hidden" name="billId" value={b.billId} />
 							<input type="hidden" name="dueDate" value={b.dueDate} />
-							<button class="btn-secondary px-2 py-1 text-xs" aria-label="Add {b.name} to plan"
-								>Add</button
-							>
+							<button class="btn-secondary btn-sm" aria-label="Add {b.name} to plan">Add</button>
 						</form>
 					{/if}
 				</span>
